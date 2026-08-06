@@ -2,25 +2,21 @@
   "name": "mosimi-plus-demo",
   "private": true,
   "version": "0.0.0",
-  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
-    "lint": "oxlint",
-    "preview": "vite preview"
-  },
-  "dependencies": {
-    "react": "^19.2.7",
-    "react-dom": "^19.2.7",
-    "react-router-dom": "^7.18.1"
+    "dev": "npm run dev -w @mosimi/customer",
+    "dev:customer": "npm run dev -w @mosimi/customer",
+    "dev:manager": "npm run dev -w @mosimi/manager",
+    "build": "npm run build -w @mosimi/customer && npm run build -w @mosimi/manager && node scripts/assemble-dist.mjs",
+    "build:customer": "npm run build -w @mosimi/customer",
+    "build:manager": "npm run build -w @mosimi/manager",
+    "preview": "npm run preview -w @mosimi/customer"
   },
   "devDependencies": {
     "@types/node": "^24.13.2",
-    "@types/react": "^19.2.17",
-    "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^6.0.3",
-    "oxlint": "^1.71.0",
-    "typescript": "~6.0.2",
-    "vite": "^8.1.1"
+    "typescript": "~6.0.2"
   }
 }

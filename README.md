@@ -1,41 +1,32 @@
-# 모시미+ 데모
+# 모시미+ 데모 (고객 / 매니저 분리)
 
-병원 동행·돌봄 매니저 실시간 매칭 플랫폼 [모시미](https://www.mosimi.co.kr)의 핵심 플로우를 재현한 모바일 웹 데모입니다.
+병원 동행·돌봄 매칭 플랫폼 [모시미](https://www.mosimi.co.kr)의 **고객 앱**과 **매니저 앱**을 각각 독립 앱으로 분리한 데모입니다.
 
-## 앱 구성
+## 구조
 
-| 경로 | 설명 |
-|------|------|
-| `#/` | 고객 앱 / 매니저 앱 선택 |
-| `#/app` | **고객용 모시미+** — 서비스 신청 |
-| `#/manager` | **매니저용 모시미+ 매니저** — 요청 수락·배정 |
+```
+apps/customer   # 모시미+ (고객용)
+apps/manager    # 모시미+ 매니저
+packages/shared # 예약 데이터·매니저 모델 공유
+```
 
-고객이 신청하면 상태가 `matching`(수락 대기)이 되고, 매니저 앱에서 **수락**하면 해당 매니저가 배정됩니다. 같은 브라우저의 `localStorage`로 두 앱이 연동됩니다.
+같은 브라우저 origin의 `localStorage`로 예약이 공유되어, 고객 신청 → 매니저 수락 연동이 됩니다.
 
-## 매니저 앱 기능
-
-1. 수신 ON/OFF
-2. 대기 중인 서비스 요청 목록
-3. 요청 상세 확인 후 **수락 / 거절**
-4. 배정된 내 일정 관리 (시작·완료)
-5. 데모 매니저 계정 전환 (김서연 / 박준호 / 이하늘 / 최민지)
-
-## 고객 앱 기능
-
-1. 홈 / 서비스 카탈로그
-2. 예약 신청
-3. 매니저 수락 대기
-4. 배정 후 예약 확정
-5. 이용 내역 / 상담 챗봇
-
-## 실행
+## 로컬 실행
 
 ```bash
 npm install
-npm run dev
+
+# 터미널 1 — 고객 앱 http://localhost:5173
+npm run dev:customer
+
+# 터미널 2 — 매니저 앱 http://localhost:5174
+npm run dev:manager
 ```
 
 ## GitHub Pages
 
-`master`/`main` 푸시 시 Actions로 배포됩니다.  
-예: `https://hbyim.github.io/withmehospital/`
+배포 후:
+
+- 고객 앱: `https://hbyim.github.io/withmehospital/`
+- 매니저 앱: `https://hbyim.github.io/withmehospital/manager/`
