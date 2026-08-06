@@ -109,7 +109,7 @@ export function ChatPage() {
         </button>
       </form>
 
-      <Link to="/services" className="text-link center-link">
+      <Link to="/app/services" className="text-link center-link">
         서비스 신청으로 이동 →
       </Link>
     </div>

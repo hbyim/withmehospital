@@ -1,34 +1,32 @@
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
 
 const tabs = [
-  { to: '/app', label: '홈', icon: HomeIcon },
-  { to: '/app/services', label: '서비스', icon: GridIcon },
-  { to: '/app/history', label: '내역', icon: ListIcon },
-  { to: '/app/chat', label: '상담', icon: ChatIcon },
-  { to: '/app/me', label: '마이', icon: UserIcon },
+  { to: '/manager', label: '홈', icon: HomeIcon, end: true },
+  { to: '/manager/requests', label: '요청', icon: BellIcon, end: false },
+  { to: '/manager/jobs', label: '일정', icon: CalendarIcon, end: false },
+  { to: '/manager/me', label: '마이', icon: UserIcon, end: false },
 ]
 
-export function AppShell() {
+export function ManagerShell() {
   const location = useLocation()
   const hideNav =
-    location.pathname.includes('/booking') ||
-    location.pathname.includes('/matching') ||
-    location.pathname.includes('/detail')
+    location.pathname.includes('/requests/') ||
+    location.pathname.includes('/jobs/')
 
   return (
-    <div className="app-shell">
-      <div className="phone-frame">
-        <div className="phone-glow" aria-hidden />
+    <div className="app-shell manager-mode">
+      <div className="phone-frame manager-frame">
+        <div className="phone-glow manager-glow" aria-hidden />
         <main className={`phone-screen ${hideNav ? 'no-nav' : ''}`}>
           <Outlet />
         </main>
         {!hideNav && (
-          <nav className="bottom-nav" aria-label="주요 메뉴">
+          <nav className="bottom-nav manager-nav" aria-label="매니저 메뉴">
             {tabs.map((tab) => (
               <NavLink
                 key={tab.to}
                 to={tab.to}
-                end={tab.to === '/app'}
+                end={tab.end}
                 className={({ isActive }) =>
                   `nav-item ${isActive ? 'active' : ''}`
                 }
@@ -51,27 +49,19 @@ function HomeIcon() {
     </svg>
   )
 }
-function GridIcon() {
+function BellIcon() {
   return (
     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8">
-      <rect x="4" y="4" width="7" height="7" rx="1.5" />
-      <rect x="13" y="4" width="7" height="7" rx="1.5" />
-      <rect x="4" y="13" width="7" height="7" rx="1.5" />
-      <rect x="13" y="13" width="7" height="7" rx="1.5" />
+      <path d="M6 9a6 6 0 0 1 12 0c0 7 3 7 3 7H3s3 0 3-7" />
+      <path d="M10 19a2 2 0 0 0 4 0" />
     </svg>
   )
 }
-function ListIcon() {
+function CalendarIcon() {
   return (
     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8">
-      <path d="M8 7h12M8 12h12M8 17h12M4 7h.01M4 12h.01M4 17h.01" />
-    </svg>
-  )
-}
-function ChatIcon() {
-  return (
-    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8">
-      <path d="M5 18l2-2h10a3 3 0 0 0 3-3V7a3 3 0 0 0-3-3H7a3 3 0 0 0-3 3v11z" />
+      <rect x="3" y="5" width="18" height="16" rx="2" />
+      <path d="M8 3v4M16 3v4M3 10h18" />
     </svg>
   )
 }

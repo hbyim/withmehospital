@@ -1,49 +1,39 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useBooking } from '../store/BookingContext'
 
-const steps = [
-  '요청 접수',
-  '위치 기반 탐색',
-  '가능 매니저 필터링',
-  '최적 매칭 완료',
+const tips = [
+  '근처 매니저 앱으로 요청을 전달했습니다',
+  '가능 매니저가 일정을 확인하고 있습니다',
+  '수락하는 매니저가 배정됩니다',
 ]
 
 export function MatchingPage() {
   const { bookingId } = useParams()
   const navigate = useNavigate()
-  const { bookings, matchManager } = useBooking()
+  const { bookings } = useBooking()
   const booking = bookings.find((b) => b.id === bookingId)
-  const [step, setStep] = useState(0)
-  const started = useRef(false)
+  const [tipIndex, setTipIndex] = useState(0)
 
   useEffect(() => {
-    if (!booking || !bookingId) return
+    if (!booking) return
     if (booking.status === 'matched' || booking.manager) {
-      navigate(`/detail/${booking.id}`, { replace: true })
-      return
+      navigate(`/app/detail/${booking.id}`, { replace: true })
     }
-    if (started.current) return
-    started.current = true
+  }, [booking, navigate])
 
-    const timers = [
-      setTimeout(() => setStep(1), 500),
-      setTimeout(() => setStep(2), 1100),
-      setTimeout(() => setStep(3), 1700),
-    ]
-
-    matchManager(bookingId).then(() => {
-      navigate(`/detail/${bookingId}`, { replace: true })
-    })
-
-    return () => timers.forEach(clearTimeout)
-  }, [booking, bookingId, matchManager, navigate])
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      setTipIndex((i) => (i + 1) % tips.length)
+    }, 2200)
+    return () => clearInterval(id)
+  }, [])
 
   if (!booking) {
     return (
       <div className="page">
         <p>예약을 찾을 수 없습니다.</p>
-        <Link to="/">홈으로</Link>
+        <Link to="/app">홈으로</Link>
       </div>
     )
   }
@@ -57,19 +47,37 @@ export function MatchingPage() {
         <i className="pin" />
       </div>
       <p className="brand-inline center">모시미+</p>
-      <h1>근처 매니저를 찾는 중</h1>
+      <h1>매니저 수락 대기 중</h1>
       <p className="muted center">
-        AI·빅데이터·위치정보로 {booking.pickup} 인근 매니저를 매칭합니다.
+        {booking.pickup} 인근 매니저에게 요청을 보냈습니다.
+        <br />
+        매니저 앱에서 수락하면 바로 배정됩니다.
+      </p>
+
+      <p className="match-tip animate-fade-up" key={tipIndex}>
+        {tips[tipIndex]}
       </p>
 
       <ol className="match-steps">
-        {steps.map((label, i) => (
-          <li key={label} className={i <= step ? 'done' : ''}>
-            <span>{i + 1}</span>
-            {label}
-          </li>
-        ))}
+        <li className="done">
+          <span>1</span>요청 접수
+        </li>
+        <li className="done">
+          <span>2</span>매니저 앱으로 전달
+        </li>
+        <li className={booking.manager ? 'done' : ''}>
+          <span>3</span>매니저 수락·배정
+        </li>
       </ol>
+
+      <div className="action-stack" style={{ marginTop: 20, width: '100%' }}>
+        <Link to="/manager" className="btn primary block">
+          매니저 앱에서 수락해보기
+        </Link>
+        <Link to={`/app/detail/${booking.id}`} className="btn ghost block">
+          예약 상세 보기
+        </Link>
+      </div>
     </div>
   )
 }

@@ -40,7 +40,7 @@ export function ServicesPage() {
       <ul className="service-list">
         {list.map((s) => (
           <li key={s.id}>
-            <Link to={`/booking/${s.id}`} className="service-row">
+            <Link to={`/app/booking/${s.id}`} className="service-row">
               <span className="row-icon">
                 <ServiceIcon name={s.icon} size={24} />
               </span>

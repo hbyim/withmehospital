@@ -23,10 +23,10 @@ export function HomePage() {
           AI·위치 기반 실시간 매칭으로 병원 동행과 돌봄 매니저를 연결합니다.
         </p>
         <div className="hero-cta animate-fade-up delay-3">
-          <Link to="/services" className="btn primary">
+          <Link to="/app/services" className="btn primary">
             서비스 신청하기
           </Link>
-          <Link to="/chat" className="btn ghost">
+          <Link to="/app/chat" className="btn ghost">
             챗봇 상담
           </Link>
         </div>
@@ -44,7 +44,7 @@ export function HomePage() {
               {upcoming.destination}
             </p>
           </div>
-          <Link to={`/detail/${upcoming.id}`} className="text-link">
+          <Link to={`/app/detail/${upcoming.id}`} className="text-link">
             상세
           </Link>
         </section>
@@ -53,13 +53,13 @@ export function HomePage() {
       <section className="section">
         <div className="section-head">
           <h2>동행 서비스</h2>
-          <Link to="/services?tab=companion">전체</Link>
+          <Link to="/app/services?tab=companion">전체</Link>
         </div>
         <div className="service-rail">
           {companionServices.slice(0, 4).map((s) => (
             <Link
               key={s.id}
-              to={`/booking/${s.id}`}
+              to={`/app/booking/${s.id}`}
               className="service-chip"
             >
               <span className="chip-icon">
@@ -75,13 +75,13 @@ export function HomePage() {
       <section className="section">
         <div className="section-head">
           <h2>돌봄 서비스</h2>
-          <Link to="/services?tab=care">전체</Link>
+          <Link to="/app/services?tab=care">전체</Link>
         </div>
         <div className="service-rail">
           {careServices.slice(0, 4).map((s) => (
             <Link
               key={s.id}
-              to={`/booking/${s.id}`}
+              to={`/app/booking/${s.id}`}
               className="service-chip care"
             >
               <span className="chip-icon">

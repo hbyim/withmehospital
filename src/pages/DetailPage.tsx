@@ -22,7 +22,7 @@ export function DetailPage() {
     return (
       <div className="page">
         <p>예약을 찾을 수 없습니다.</p>
-        <Link to="/history">내역으로</Link>
+        <Link to="/app/history">내역으로</Link>
       </div>
     )
   }
@@ -30,7 +30,7 @@ export function DetailPage() {
   return (
     <div className="page detail-page">
       <header className="sub-header">
-        <button type="button" className="back" onClick={() => navigate('/history')}>
+        <button type="button" className="back" onClick={() => navigate('/app/history')}>
           ←
         </button>
         <div>
@@ -82,6 +82,11 @@ export function DetailPage() {
       )}
 
       <div className="action-stack">
+        {booking.status === 'matching' && (
+          <Link to={`/app/matching/${booking.id}`} className="btn primary block">
+            매니저 수락 대기 화면
+          </Link>
+        )}
         {booking.status === 'matched' && (
           <button
             type="button"
@@ -94,26 +99,15 @@ export function DetailPage() {
           </button>
         )}
         {booking.status === 'confirmed' && (
-          <button
-            type="button"
-            className="btn primary block"
-            onClick={() =>
-              updateBooking(booking.id, { status: 'in_progress' })
-            }
-          >
-            서비스 시작 (데모)
-          </button>
+          <p className="muted small">
+            매니저가 매니저 앱에서 서비스를 시작하면 진행 상태로 바뀝니다.
+          </p>
         )}
         {booking.status === 'in_progress' && (
-          <button
-            type="button"
-            className="btn primary block"
-            onClick={() =>
-              updateBooking(booking.id, { status: 'completed' })
-            }
-          >
-            이용 완료 처리
-          </button>
+          <p className="muted small">서비스가 진행 중입니다.</p>
+        )}
+        {booking.status === 'completed' && (
+          <p className="muted small">이용이 완료되었습니다.</p>
         )}
         {!['completed', 'cancelled'].includes(booking.status) && (
           <button
@@ -126,7 +120,10 @@ export function DetailPage() {
             예약 취소
           </button>
         )}
-        <Link to="/chat" className="btn ghost block">
+        <Link to="/manager" className="btn ghost block">
+          매니저 앱 열기
+        </Link>
+        <Link to="/app/chat" className="btn ghost block">
           상담 챗봇 열기
         </Link>
       </div>

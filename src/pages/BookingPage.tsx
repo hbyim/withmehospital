@@ -32,7 +32,7 @@ export function BookingPage() {
     return (
       <div className="page">
         <p>서비스를 찾을 수 없습니다.</p>
-        <Link to="/services">목록으로</Link>
+        <Link to="/app/services">목록으로</Link>
       </div>
     )
   }
@@ -42,7 +42,7 @@ export function BookingPage() {
     const booking = createBooking()
     if (!booking) return
     resetDraft()
-    navigate(`/matching/${booking.id}`)
+    navigate(`/app/matching/${booking.id}`)
   }
 
   return (

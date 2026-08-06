@@ -26,7 +26,7 @@ export function HistoryPage() {
       {bookings.length === 0 ? (
         <div className="empty">
           <p>아직 예약이 없습니다.</p>
-          <Link to="/services" className="btn primary">
+          <Link to="/app/services" className="btn primary">
             첫 서비스 신청
           </Link>
         </div>
@@ -34,7 +34,7 @@ export function HistoryPage() {
         <ul className="history-list">
           {bookings.map((b) => (
             <li key={b.id}>
-              <Link to={`/detail/${b.id}`} className="history-row">
+              <Link to={`/app/detail/${b.id}`} className="history-row">
                 <div>
                   <div className="row-top">
                     <strong>{b.service.name}</strong>

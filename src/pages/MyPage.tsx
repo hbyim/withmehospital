@@ -40,13 +40,13 @@ export function MyPage() {
 
       <ul className="menu-list">
         <li>
-          <Link to="/history">이용 내역</Link>
+          <Link to="/app/history">이용 내역</Link>
         </li>
         <li>
-          <Link to="/services">새 서비스 신청</Link>
+          <Link to="/app/services">새 서비스 신청</Link>
         </li>
         <li>
-          <Link to="/chat">고객 상담</Link>
+          <Link to="/app/chat">고객 상담</Link>
         </li>
         <li>
           <a href="https://www.mosimi.co.kr" target="_blank" rel="noreferrer">
@@ -57,8 +57,14 @@ export function MyPage() {
 
       <p className="demo-note">
         이 앱은 모시미(병원동행·돌봄 매칭)의 핵심 기능을 재현한 데모입니다.
-        실제 결제·본인인증·매니저 배정은 동작하지 않습니다.
+        매니저 배정은 매니저 앱에서 수락하면 반영됩니다.
       </p>
+      <Link to="/" className="text-link center-link">
+        ← 앱 선택으로
+      </Link>
+      <Link to="/manager" className="text-link center-link">
+        매니저 앱 열기 →
+      </Link>
     </div>
   )
 }

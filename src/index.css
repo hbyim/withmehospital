@@ -979,3 +979,251 @@ button {
     border: none;
   }
 }
+
+/* Portal */
+.portal-page {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 24px 16px;
+}
+
+.portal-card {
+  width: min(100%, 480px);
+  padding: 28px 24px;
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+}
+
+.portal-card h1 {
+  margin: 8px 0 10px;
+  font-family: var(--display);
+  font-size: 1.6rem;
+}
+
+.portal-actions {
+  display: grid;
+  gap: 12px;
+  margin-top: 22px;
+}
+
+.portal-tile {
+  display: block;
+  padding: 18px 16px;
+  border-radius: 18px;
+  border: 1px solid var(--line);
+  transition: transform 0.18s, border-color 0.18s;
+}
+
+.portal-tile:hover {
+  transform: translateY(-2px);
+}
+
+.portal-tile.customer {
+  background: linear-gradient(145deg, #fff, #eaf7f4);
+}
+
+.portal-tile.manager {
+  background: linear-gradient(145deg, #1c2430, #2a3a4f);
+  color: #f4f7fb;
+  border-color: transparent;
+}
+
+.portal-tile.manager .portal-badge {
+  background: rgba(240, 180, 41, 0.2);
+  color: #f0b429;
+}
+
+.portal-tile.manager p {
+  color: rgba(244, 247, 251, 0.72);
+}
+
+.portal-badge {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: var(--brand-soft);
+  color: var(--brand-deep);
+  margin-bottom: 8px;
+}
+
+.portal-tile strong {
+  display: block;
+  font-size: 1.15rem;
+  margin-bottom: 4px;
+}
+
+.portal-tile p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+/* Manager mode */
+.manager-mode body,
+.manager-mode {
+  --brand: #2f4f7a;
+  --brand-deep: #1c2f4a;
+  --brand-soft: #e4ebf5;
+}
+
+.manager-frame {
+  background: #f7f8fb;
+}
+
+.manager-glow {
+  background: radial-gradient(
+    circle at 70% 10%,
+    rgba(240, 180, 41, 0.22),
+    transparent 55%
+  );
+}
+
+.manager-nav .nav-item.active {
+  background: #e4ebf5;
+  color: #1c2f4a;
+}
+
+.manager-brand {
+  color: #2f4f7a !important;
+}
+
+.manager-hero {
+  margin-bottom: 16px;
+}
+
+.manager-hero h1 {
+  margin: 4px 0 8px;
+  font-family: var(--display);
+  font-size: 1.45rem;
+}
+
+.manager-hero-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.online-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: none;
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.online-toggle i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.online-toggle.on {
+  background: #ddf5e8;
+  color: #1a7a4f;
+}
+
+.online-toggle.off {
+  background: #eee;
+  color: #777;
+}
+
+.call-row {
+  border-color: rgba(47, 79, 122, 0.18);
+  background: linear-gradient(120deg, #fff, #f3f6fb);
+}
+
+.meta-earn {
+  margin-top: 6px !important;
+  color: #2f4f7a !important;
+  font-weight: 700 !important;
+}
+
+.empty.soft {
+  padding: 18px;
+  border-radius: 14px;
+  background: #eef1f5;
+  color: var(--muted);
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+.match-tip {
+  margin: 12px 0 0;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: var(--brand-soft);
+  color: var(--brand-deep);
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.form-error {
+  margin: 0;
+  color: #c0392b;
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+
+.switch-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: #fff;
+  border: 1px solid var(--line);
+  margin-bottom: 16px;
+  font-weight: 600;
+}
+
+.manager-switch {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.manager-switch button {
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: 12px;
+  padding: 12px;
+  font-weight: 600;
+}
+
+.manager-switch button.active {
+  background: #2f4f7a;
+  color: #fff;
+  border-color: #2f4f7a;
+}
+
+.menu-list .linkish {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: #fff;
+  border: 1px solid var(--line);
+  font-weight: 600;
+  color: inherit;
+}
+
+.badge.matching {
+  background: #fff3d6;
+  color: #9a6b00;
+}
+
+.badge.in_progress {
+  background: #e4ebf5;
+  color: #2f4f7a;
+}
