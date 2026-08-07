@@ -50,7 +50,18 @@ async function neon(path, init = {}) {
 const projectName = process.env.NEON_PROJECT_NAME || 'mosimi'
 const region = process.env.NEON_REGION || 'aws-ap-southeast-1' // Singapore (Render singapore와 근접)
 
-console.log(`Creating Neon project "${projectName}" in ${region}...`)
+async function resolveOrgId() {
+  if (process.env.NEON_ORG_ID) return process.env.NEON_ORG_ID
+  const data = await neon('/users/me/organizations')
+  const org = data.organizations?.[0]
+  if (!org?.id) {
+    throw new Error('Neon organization not found. Set NEON_ORG_ID manually.')
+  }
+  return org.id
+}
+
+const orgId = await resolveOrgId()
+console.log(`Creating Neon project "${projectName}" in ${region} (org ${orgId})...`)
 
 const created = await neon('/projects', {
   method: 'POST',
@@ -59,6 +70,7 @@ const created = await neon('/projects', {
       name: projectName,
       region_id: region,
       pg_version: 16,
+      org_id: orgId,
     },
   }),
 })
