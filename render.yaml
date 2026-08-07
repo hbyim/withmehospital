@@ -1,0 +1,33 @@
+# Render Blueprint — https://dashboard.render.com/blueprints
+# Neon DATABASE_URL 을 서비스 Environment에 붙여넣으세요.
+
+services:
+  - type: web
+    name: mosimi-api
+    runtime: node
+    plan: free
+    region: singapore
+    rootDir: .
+    buildCommand: npm ci
+    startCommand: npm run start -w @mosimi/api
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: '22'
+      - key: NODE_ENV
+        value: production
+      - key: HOST
+        value: 0.0.0.0
+      - key: SEED_ON_BOOT
+        value: '1'
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CORS_ORIGIN
+        value: https://hbyim.github.io,http://localhost:5173,http://localhost:5174,http://127.0.0.1:5173,http://127.0.0.1:5174
+      - key: CUSTOMER_APP_URL
+        value: https://hbyim.github.io/withmehospital/
+      - key: MANAGER_APP_URL
+        value: https://hbyim.github.io/withmehospital/manager/
+      # Neon Console → Connection string (URI, sslmode=require) 붙여넣기
+      - key: DATABASE_URL
+        sync: false

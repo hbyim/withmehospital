@@ -78,6 +78,43 @@ npm run dev:manager
 프론트는 로컬 개발 시 Vite 프록시(`/api` → `:8787`)를 사용합니다.  
 필요하면 `VITE_API_BASE_URL`로 API 주소를 직접 지정할 수 있습니다.
 
+## 무료 호스팅 (Neon + Render + GitHub Pages)
+
+### 1) Neon PostgreSQL
+
+1. [Neon Console](https://console.neon.tech) 가입
+2. **Account → API Keys**에서 키 생성 후:
+
+```bash
+export NEON_API_KEY='napi_...'
+node scripts/provision-neon.mjs
+```
+
+또는 Console에서 프로젝트 생성 후 **Connection string** 복사.
+
+### 2) Render API
+
+1. [Render Blueprint](https://dashboard.render.com/select-repo?type=blueprint) → `withmehospital` 저장소 연결  
+   (`render.yaml` 사용)
+2. Environment에 Neon `DATABASE_URL` 붙여넣기
+3. Deploy 후 URL 확인 (예: `https://mosimi-api.onrender.com`)
+4. `/health` 응답 확인
+
+`SEED_ON_BOOT=1` 이면 빈 DB에 시드 계정이 자동 생성됩니다.
+
+### 3) GitHub Pages → API 연결
+
+Repository **Settings → Secrets and variables → Actions**에 추가:
+
+| Secret | 값 |
+|--------|-----|
+| `VITE_API_BASE_URL` | `https://mosimi-api.onrender.com` (끝 `/` 없이) |
+
+이후 `master` 푸시 또는 Actions **Deploy to GitHub Pages** 수동 실행.
+
+- 고객: https://hbyim.github.io/withmehospital/
+- 매니저: https://hbyim.github.io/withmehospital/manager/
+
 ### VAPID 키 생성
 
 ```bash

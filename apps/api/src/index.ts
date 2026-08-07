@@ -20,7 +20,16 @@ config()
 
 const app = new Hono<AppEnv>()
 
-const origins = (process.env.CORS_ORIGIN || '*')
+const origins = (
+  process.env.CORS_ORIGIN ||
+  [
+    'http://localhost:5173',
+    'http://localhost:5174',
+    'http://127.0.0.1:5173',
+    'http://127.0.0.1:5174',
+    'https://hbyim.github.io',
+  ].join(',')
+)
   .split(',')
   .map((s) => s.trim())
   .filter(Boolean)
@@ -77,11 +86,17 @@ app.onError((err, c) => {
 })
 
 const port = Number(process.env.PORT || 8787)
+const hostname = process.env.HOST || '0.0.0.0'
 
 await migrate()
 
-serve({ fetch: app.fetch, port }, (info) => {
-  console.log(`모시미 API listening on http://localhost:${info.port}`)
+if (process.env.SEED_ON_BOOT === '1') {
+  const { default: seedMain } = await import('./seed-boot')
+  await seedMain()
+}
+
+serve({ fetch: app.fetch, port, hostname }, (info) => {
+  console.log(`모시미 API listening on http://${hostname}:${info.port}`)
 })
 
 export default app

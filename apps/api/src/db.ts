@@ -10,7 +10,15 @@ const connectionString =
   process.env.DATABASE_URL ||
   'postgresql://mosimi:mosimi@localhost:5432/mosimi'
 
-export const pool = new pg.Pool({ connectionString })
+const isLocalDb =
+  /localhost|127\.0\.0\.1/.test(connectionString) &&
+  !/sslmode=require/i.test(connectionString)
+
+export const pool = new pg.Pool({
+  connectionString,
+  // Neon 등 관리형 PG는 SSL 필요
+  ssl: isLocalDb ? undefined : { rejectUnauthorized: false },
+})
 
 export async function query<T extends pg.QueryResultRow = pg.QueryResultRow>(
   text: string,
