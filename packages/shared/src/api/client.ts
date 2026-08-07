@@ -23,7 +23,8 @@ export function getApiBase() {
   if (configured) return configured
   // 로컬 개발: Vite 프록시로 same-origin 호출 (CORS/Load failed 방지)
   if (import.meta.env.DEV) return ''
-  return 'http://127.0.0.1:8787'
+  // GitHub Pages 등 프로덕션 기본 API
+  return 'https://mosimi-api.onrender.com'
 }
 
 export function getToken() {
