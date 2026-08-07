@@ -18,6 +18,8 @@ export const pool = new pg.Pool({
   connectionString,
   // Neon 등 관리형 PG는 SSL 필요
   ssl: isLocalDb ? undefined : { rejectUnauthorized: false },
+  connectionTimeoutMillis: 15_000,
+  idleTimeoutMillis: 30_000,
 })
 
 export async function query<T extends pg.QueryResultRow = pg.QueryResultRow>(

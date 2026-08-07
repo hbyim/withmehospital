@@ -18,8 +18,9 @@ services:
         value: production
       - key: HOST
         value: 0.0.0.0
+      # 이미 Neon에 시드했다면 0 권장 (부팅 지연 방지)
       - key: SEED_ON_BOOT
-        value: '1'
+        value: '0'
       - key: JWT_SECRET
         generateValue: true
       - key: CORS_ORIGIN

@@ -40,10 +40,12 @@ const localDevOrigin =
 function resolveCorsOrigin(origin: string) {
   if (origins.includes('*')) return origin || '*'
   if (origins.includes(origin)) return origin
-  // localhost / 127.0.0.1 포트 차이는 로컬 개발에서 허용
   if (localDevOrigin.test(origin)) return origin
   return origins[0] ?? origin
 }
+
+let dbReady = false
+let dbError: string | null = null
 
 app.use(
   '*',
@@ -54,8 +56,15 @@ app.use(
   }),
 )
 
+/** Render 포트 스캔용 — DB 준비 전이라도 즉시 응답 */
 app.get('/health', (c) =>
-  c.json({ ok: true, service: 'mosimi-api', time: new Date().toISOString() }),
+  c.json({
+    ok: true,
+    service: 'mosimi-api',
+    dbReady,
+    dbError,
+    time: new Date().toISOString(),
+  }),
 )
 
 app.route('/api/auth', authRoutes)
@@ -88,15 +97,35 @@ app.onError((err, c) => {
 const port = Number(process.env.PORT || 8787)
 const hostname = process.env.HOST || '0.0.0.0'
 
-await migrate()
+console.log(`[boot] binding ${hostname}:${port} (PORT=${process.env.PORT ?? 'unset'})`)
+console.log(
+  `[boot] DATABASE_URL set=${Boolean(process.env.DATABASE_URL)} SEED_ON_BOOT=${process.env.SEED_ON_BOOT ?? '0'}`,
+)
 
-if (process.env.SEED_ON_BOOT === '1') {
-  const { default: seedMain } = await import('./seed-boot')
-  await seedMain()
+// Render는 open port 를 먼저 확인함 → migrate/seed 전에 listen
+serve({ fetch: app.fetch, port, hostname }, (info) => {
+  console.log(`[boot] listening on http://${hostname}:${info.port}`)
+})
+
+async function prepareDatabase() {
+  try {
+    console.log('[boot] migrate start')
+    await migrate()
+    if (process.env.SEED_ON_BOOT === '1') {
+      console.log('[boot] seed start')
+      const { default: seedMain } = await import('./seed-boot')
+      await seedMain()
+    }
+    dbReady = true
+    dbError = null
+    console.log('[boot] database ready')
+  } catch (err) {
+    dbReady = false
+    dbError = err instanceof Error ? err.message : String(err)
+    console.error('[boot] database prepare failed:', err)
+  }
 }
 
-serve({ fetch: app.fetch, port, hostname }, (info) => {
-  console.log(`모시미 API listening on http://${hostname}:${info.port}`)
-})
+void prepareDatabase()
 
 export default app
