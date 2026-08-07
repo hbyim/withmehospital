@@ -1,20 +1,16 @@
 import {
   createContext,
+  useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
-  useEffect,
-  useCallback,
   type ReactNode,
 } from 'react'
+import { api } from '../api/client'
 import type { Manager } from '../data/managers'
-import { managers, pickNearbyManager } from '../data/managers'
 import type { ServiceItem } from '../data/services'
-import {
-  BOOKINGS_CHANNEL,
-  BOOKINGS_STORAGE_KEY,
-  emitBookingsChanged,
-} from './storage'
+import { useAuth } from './AuthContext'
 
 export type BookingStatus =
   | 'draft'
@@ -37,6 +33,7 @@ export type Booking = {
   note: string
   price: number
   status: BookingStatus
+  paymentStatus?: 'unpaid' | 'pending' | 'paid' | 'refunded'
   manager?: Manager
   customerName?: string
   createdAt: string
@@ -59,10 +56,16 @@ type BookingContextValue = {
   setDraft: (patch: Partial<BookingDraft>) => void
   resetDraft: () => void
   bookings: Booking[]
-  createBooking: () => Booking | null
-  updateBooking: (id: string, patch: Partial<Booking>) => void
-  acceptBooking: (id: string, manager: Manager) => boolean
-  /** @deprecated 자동 매칭 대신 매니저 수락을 사용합니다 */
+  loading: boolean
+  error: string | null
+  refreshBookings: (scope?: 'open' | 'mine' | 'all') => Promise<void>
+  createBooking: () => Promise<Booking | null>
+  updateBooking: (
+    id: string,
+    patch: Partial<Booking> & { status?: BookingStatus },
+  ) => Promise<void>
+  acceptBooking: (id: string, _manager?: Manager) => Promise<boolean>
+  declineBooking: (id: string) => Promise<void>
   matchManager: (id: string) => Promise<Manager>
   openRequests: Booking[]
 }
@@ -86,164 +89,49 @@ const defaultDraft = (): BookingDraft => {
 
 const BookingContext = createContext<BookingContextValue | null>(null)
 
-function hospitalService(): ServiceItem {
-  return {
-    id: 'hospital',
-    category: 'companion',
-    name: '병원 동행',
-    description: '집 출발부터 접수·진료 대기·귀가까지 함께합니다.',
-    basePrice: 35000,
-    unit: '3시간',
-    durationHint: '기본 3시간',
-    icon: 'hospital',
-  }
-}
-
-function seedBookings(): Booking[] {
-  const today = new Date().toISOString().slice(0, 10)
-  const tomorrow = new Date()
-  tomorrow.setDate(tomorrow.getDate() + 1)
-  const tomorrowStr = tomorrow.toISOString().slice(0, 10)
-
-  return [
-    {
-      id: 'demo-open-1',
-      service: hospitalService(),
-      date: today,
-      time: '15:30',
-      durationHours: 3,
-      pickup: '서울시 송파구 잠실동',
-      destination: '서울아산병원',
-      careTarget: '어머니',
-      note: '휠체어 필요 · 외래 내과 있음',
-      price: 35000,
-      status: 'matching',
-      customerName: '이보호',
-      createdAt: new Date(Date.now() - 4 * 60_000).toISOString(),
-    },
-    {
-      id: 'demo-open-2',
-      service: {
-        id: 'elder',
-        category: 'care',
-        name: '노인 돌봄',
-        description: '일상 케어, 약 복용 확인, 말벗 등 맞춤 돌봄.',
-        basePrice: 30000,
-        unit: '3시간',
-        durationHint: '기본 3시간',
-        icon: 'elder',
-      },
-      date: tomorrowStr,
-      time: '09:00',
-      durationHours: 4,
-      pickup: '서울시 마포구 연남동',
-      destination: '자택 / 돌봄 장소',
-      careTarget: '아버지',
-      note: '오후 약 복용 확인 부탁드립니다',
-      price: 40000,
-      status: 'matching',
-      customerName: '박신청',
-      createdAt: new Date(Date.now() - 12 * 60_000).toISOString(),
-    },
-    {
-      id: 'demo-open-3',
-      service: {
-        id: 'dialysis',
-        category: 'companion',
-        name: '투석 전용 동행',
-        description: '정기 투석 일정에 맞춰 이동과 대기를 지원합니다.',
-        basePrice: 40000,
-        unit: '회',
-        durationHint: '평균 4시간',
-        icon: 'dialysis',
-      },
-      date: tomorrowStr,
-      time: '07:30',
-      durationHours: 4,
-      pickup: '서울시 강남구 대치동',
-      destination: '강남세브란스병원',
-      careTarget: '본인',
-      note: '',
-      price: 40000,
-      status: 'matching',
-      customerName: '최이용',
-      createdAt: new Date(Date.now() - 20 * 60_000).toISOString(),
-    },
-    {
-      id: 'demo-1',
-      service: hospitalService(),
-      date: today,
-      time: '14:00',
-      durationHours: 3,
-      pickup: '서울시 마포구 연남동',
-      destination: '세브란스병원',
-      careTarget: '아버지',
-      note: '휠체어 필요',
-      price: 35000,
-      status: 'confirmed',
-      manager: pickNearbyManager(1),
-      customerName: '김모시',
-      createdAt: new Date(Date.now() - 86_400_000).toISOString(),
-      acceptedAt: new Date(Date.now() - 80_000_000).toISOString(),
-    },
-  ]
-}
-
-function loadBookings(): Booking[] {
-  try {
-    const raw = localStorage.getItem(BOOKINGS_STORAGE_KEY)
-    if (!raw) return seedBookings()
-    const parsed = JSON.parse(raw) as Booking[]
-    return Array.isArray(parsed) ? parsed : seedBookings()
-  } catch {
-    return seedBookings()
-  }
-}
-
-function persistBookings(bookings: Booking[]) {
-  localStorage.setItem(BOOKINGS_STORAGE_KEY, JSON.stringify(bookings))
-  emitBookingsChanged()
-}
-
-export function BookingProvider({ children }: { children: ReactNode }) {
+export function BookingProvider({
+  children,
+  scope = 'all',
+}: {
+  children: ReactNode
+  scope?: 'open' | 'mine' | 'all'
+}) {
+  const { token } = useAuth()
   const [draft, setDraftState] = useState<BookingDraft>(defaultDraft)
-  const [bookings, setBookings] = useState<Booking[]>(() => loadBookings())
+  const [bookings, setBookings] = useState<Booking[]>([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  const reloadFromStorage = useCallback(() => {
-    setBookings(loadBookings())
-  }, [])
+  const refreshBookings = useCallback(
+    async (nextScope = scope) => {
+      if (!token) {
+        setBookings([])
+        return
+      }
+      setLoading(true)
+      setError(null)
+      try {
+        const q =
+          nextScope && nextScope !== 'all' ? `?scope=${nextScope}` : ''
+        const data = await api<{ bookings: Booking[] }>(`/api/bookings${q}`)
+        setBookings(data.bookings)
+      } catch (e) {
+        setError(e instanceof Error ? e.message : 'Failed to load bookings')
+      } finally {
+        setLoading(false)
+      }
+    },
+    [token, scope],
+  )
 
   useEffect(() => {
-    const onStorage = (e: StorageEvent) => {
-      if (e.key === BOOKINGS_STORAGE_KEY) reloadFromStorage()
-    }
-    const onCustom = () => reloadFromStorage()
-
-    window.addEventListener('storage', onStorage)
-    window.addEventListener('mosimi-bookings-updated', onCustom)
-
-    let channel: BroadcastChannel | null = null
-    try {
-      channel = new BroadcastChannel(BOOKINGS_CHANNEL)
-      channel.onmessage = () => reloadFromStorage()
-    } catch {
-      channel = null
-    }
-
-    return () => {
-      window.removeEventListener('storage', onStorage)
-      window.removeEventListener('mosimi-bookings-updated', onCustom)
-      channel?.close()
-    }
-  }, [reloadFromStorage])
-
-  const commit = useCallback((updater: (prev: Booking[]) => Booking[]) => {
-    setBookings((prev) => {
-      const next = updater(prev)
-      persistBookings(next)
-      return next
-    })
-  }, [])
+    void refreshBookings()
+    if (!token) return
+    const id = window.setInterval(() => {
+      void refreshBookings()
+    }, 4000)
+    return () => clearInterval(id)
+  }, [refreshBookings, token])
 
   const value = useMemo<BookingContextValue>(
     () => ({
@@ -251,77 +139,77 @@ export function BookingProvider({ children }: { children: ReactNode }) {
       setDraft: (patch) => setDraftState((prev) => ({ ...prev, ...patch })),
       resetDraft: () => setDraftState(defaultDraft()),
       bookings,
-      openRequests: bookings.filter((b) => b.status === 'matching' && !b.manager),
-      createBooking: () => {
+      loading,
+      error,
+      refreshBookings,
+      openRequests: bookings.filter(
+        (b) => b.status === 'matching' && !b.manager,
+      ),
+      createBooking: async () => {
         if (!draft.service) return null
-        const price =
-          draft.service.basePrice +
-          Math.max(0, draft.durationHours - 3) * 10000
-        const booking: Booking = {
-          id: `bk-${Date.now()}`,
-          service: draft.service,
-          date: draft.date,
-          time: draft.time,
-          durationHours: draft.durationHours,
-          pickup: draft.pickup,
-          destination: draft.destination,
-          careTarget: draft.careTarget,
-          note: draft.note,
-          price,
-          status: 'matching',
-          customerName: '김모시',
-          createdAt: new Date().toISOString(),
-        }
-        commit((prev) => [booking, ...prev])
-        return booking
+        const data = await api<{ booking: Booking }>('/api/bookings', {
+          method: 'POST',
+          body: JSON.stringify({
+            serviceId: draft.service.id,
+            date: draft.date,
+            time: draft.time,
+            durationHours: draft.durationHours,
+            pickup: draft.pickup,
+            destination: draft.destination,
+            careTarget: draft.careTarget,
+            note: draft.note,
+          }),
+        })
+        setBookings((prev) => [data.booking, ...prev])
+        return data.booking
       },
-      updateBooking: (id, patch) => {
-        commit((prev) =>
-          prev.map((b) => (b.id === id ? { ...b, ...patch } : b)),
+      updateBooking: async (id, patch) => {
+        if (!patch.status) return
+        const data = await api<{ booking: Booking }>(
+          `/api/bookings/${id}/status`,
+          {
+            method: 'PATCH',
+            body: JSON.stringify({ status: patch.status }),
+          },
+        )
+        setBookings((prev) =>
+          prev.map((b) => (b.id === id ? data.booking : b)),
         )
       },
-      acceptBooking: (id, manager) => {
-        let accepted = false
-        setBookings((prev) => {
-          const target = prev.find((b) => b.id === id)
-          if (!target || target.status !== 'matching' || target.manager) {
-            return prev
-          }
-          accepted = true
-          const next = prev.map((b) =>
-            b.id === id
-              ? {
-                  ...b,
-                  manager,
-                  status: 'matched' as const,
-                  acceptedAt: new Date().toISOString(),
-                }
-              : b,
+      acceptBooking: async (id) => {
+        try {
+          const data = await api<{ booking: Booking }>(
+            `/api/bookings/${id}/accept`,
+            { method: 'POST' },
           )
-          persistBookings(next)
-          return next
-        })
-        return accepted
+          setBookings((prev) => {
+            const rest = prev.filter((b) => b.id !== id)
+            return [data.booking, ...rest]
+          })
+          return true
+        } catch {
+          await refreshBookings()
+          return false
+        }
       },
-      matchManager: (id) =>
-        new Promise((resolve) => {
-          const manager = managers[0]
-          commit((prev) =>
-            prev.map((b) =>
-              b.id === id && b.status === 'matching'
-                ? {
-                    ...b,
-                    manager,
-                    status: 'matched' as const,
-                    acceptedAt: new Date().toISOString(),
-                  }
-                : b,
-            ),
+      declineBooking: async (id) => {
+        await api(`/api/bookings/${id}/decline`, { method: 'POST' })
+        setBookings((prev) => prev.filter((b) => b.id !== id))
+      },
+      matchManager: async (id) => {
+        // 폴링으로 매니저 수락을 기다림
+        for (let i = 0; i < 30; i++) {
+          const data = await api<{ booking: Booking }>(`/api/bookings/${id}`)
+          setBookings((prev) =>
+            prev.map((b) => (b.id === id ? data.booking : b)),
           )
-          resolve(manager)
-        }),
+          if (data.booking.manager) return data.booking.manager
+          await new Promise((r) => setTimeout(r, 2000))
+        }
+        throw new Error('매니저 수락 대기 시간이 초과되었습니다.')
+      },
     }),
-    [draft, bookings, commit],
+    [draft, bookings, loading, error, refreshBookings],
   )
 
   return (

@@ -1,5 +1,10 @@
 import { HashRouter, Navigate, Route, Routes } from 'react-router-dom'
-import { BookingProvider, ManagerProvider } from '@mosimi/shared'
+import {
+  AuthProvider,
+  BookingProvider,
+  ManagerProvider,
+  useAuth,
+} from '@mosimi/shared'
 import { ManagerShell } from './components/ManagerShell'
 import { ManagerHomePage } from './pages/ManagerHomePage'
 import { ManagerRequestsPage } from './pages/ManagerRequestsPage'
@@ -7,8 +12,24 @@ import { ManagerRequestDetailPage } from './pages/ManagerRequestDetailPage'
 import { ManagerJobsPage } from './pages/ManagerJobsPage'
 import { ManagerJobDetailPage } from './pages/ManagerJobDetailPage'
 import { ManagerMyPage } from './pages/ManagerMyPage'
+import { ManagerLoginPage } from './pages/ManagerLoginPage'
 
-export default function App() {
+function AuthedApp() {
+  const { user, loading } = useAuth()
+  if (loading) {
+    return (
+      <div className="app-shell manager-mode">
+        <div className="phone-frame manager-frame">
+          <div className="page matching-page">
+            <p className="brand-inline manager-brand">모시미+ 매니저</p>
+            <p className="muted">불러오는 중…</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+  if (!user) return <ManagerLoginPage />
+
   return (
     <BookingProvider>
       <ManagerProvider>
@@ -30,5 +51,13 @@ export default function App() {
         </HashRouter>
       </ManagerProvider>
     </BookingProvider>
+  )
+}
+
+export default function App() {
+  return (
+    <AuthProvider expectedRole="manager">
+      <AuthedApp />
+    </AuthProvider>
   )
 }

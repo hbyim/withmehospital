@@ -30,7 +30,7 @@ export function ManagerHomePage() {
           <button
             type="button"
             className={`online-toggle ${session.online ? 'on' : 'off'}`}
-            onClick={() => setOnline(!session.online)}
+            onClick={() => void setOnline(!session.online)}
             aria-pressed={session.online}
           >
             <i />

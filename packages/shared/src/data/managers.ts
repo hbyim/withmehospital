@@ -8,6 +8,8 @@ export type Manager = {
   distanceKm: number
   bio: string
   color: string
+  online?: boolean
+  region?: string | null
 }
 
 export const managers: Manager[] = [

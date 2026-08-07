@@ -2,15 +2,16 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
   useMemo,
   useState,
   type ReactNode,
 } from 'react'
-import { managers, type Manager } from '../data/managers'
-import { MANAGER_SESSION_KEY } from './storage'
+import { api } from '../api/client'
+import type { Manager } from '../data/managers'
+import { useAuth } from './AuthContext'
+import { useBooking } from './BookingContext'
 
-export type ManagerSession = {
+type ManagerSession = {
   managerId: string
   online: boolean
   declinedIds: string[]
@@ -19,71 +20,70 @@ export type ManagerSession = {
 type ManagerContextValue = {
   manager: Manager
   session: ManagerSession
-  setOnline: (online: boolean) => void
+  setOnline: (online: boolean) => Promise<void>
   switchManager: (id: string) => void
-  declineRequest: (bookingId: string) => void
+  declineRequest: (bookingId: string) => Promise<void>
   isDeclined: (bookingId: string) => boolean
 }
 
 const ManagerContext = createContext<ManagerContextValue | null>(null)
 
-function loadSession(): ManagerSession {
-  try {
-    const raw = localStorage.getItem(MANAGER_SESSION_KEY)
-    if (raw) {
-      const parsed = JSON.parse(raw) as ManagerSession
-      if (managers.some((m) => m.id === parsed.managerId)) return parsed
-    }
-  } catch {
-    /* ignore */
-  }
-  return { managerId: 'm1', online: true, declinedIds: [] }
+const fallbackManager: Manager = {
+  id: 'pending',
+  name: '매니저',
+  rating: 5,
+  reviews: 0,
+  experienceYears: 0,
+  specialties: [],
+  distanceKm: 0,
+  bio: '',
+  color: '#2F4F7A',
 }
 
 export function ManagerProvider({ children }: { children: ReactNode }) {
-  const [session, setSession] = useState<ManagerSession>(() => loadSession())
+  const { manager: authManager, refreshMe } = useAuth()
+  const { declineBooking } = useBooking()
+  const [declinedIds, setDeclinedIds] = useState<string[]>([])
 
-  useEffect(() => {
-    localStorage.setItem(MANAGER_SESSION_KEY, JSON.stringify(session))
-  }, [session])
+  const manager = authManager ?? fallbackManager
 
-  const manager = useMemo(
-    () => managers.find((m) => m.id === session.managerId) ?? managers[0],
-    [session.managerId],
+  const setOnline = useCallback(
+    async (online: boolean) => {
+      await api('/api/managers/me', {
+        method: 'PATCH',
+        body: JSON.stringify({ online }),
+      })
+      await refreshMe()
+    },
+    [refreshMe],
   )
 
-  const setOnline = useCallback((online: boolean) => {
-    setSession((prev) => ({ ...prev, online }))
-  }, [])
-
-  const switchManager = useCallback((id: string) => {
-    setSession((prev) => ({ ...prev, managerId: id, declinedIds: [] }))
-  }, [])
-
-  const declineRequest = useCallback((bookingId: string) => {
-    setSession((prev) => ({
-      ...prev,
-      declinedIds: prev.declinedIds.includes(bookingId)
-        ? prev.declinedIds
-        : [...prev.declinedIds, bookingId],
-    }))
-  }, [])
-
-  const isDeclined = useCallback(
-    (bookingId: string) => session.declinedIds.includes(bookingId),
-    [session.declinedIds],
+  const declineRequest = useCallback(
+    async (bookingId: string) => {
+      await declineBooking(bookingId)
+      setDeclinedIds((prev) =>
+        prev.includes(bookingId) ? prev : [...prev, bookingId],
+      )
+    },
+    [declineBooking],
   )
 
-  const value = useMemo(
+  const value = useMemo<ManagerContextValue>(
     () => ({
       manager,
-      session,
+      session: {
+        managerId: manager.id,
+        online: Boolean(manager.online ?? true),
+        declinedIds,
+      },
       setOnline,
-      switchManager,
+      switchManager: () => {
+        // 상용: 계정 전환은 로그아웃 후 다른 매니저로 로그인
+      },
       declineRequest,
-      isDeclined,
+      isDeclined: (bookingId: string) => declinedIds.includes(bookingId),
     }),
-    [manager, session, setOnline, switchManager, declineRequest, isDeclined],
+    [manager, declinedIds, setOnline, declineRequest],
   )
 
   return (

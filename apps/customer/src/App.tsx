@@ -1,5 +1,5 @@
 import { HashRouter, Navigate, Route, Routes } from 'react-router-dom'
-import { BookingProvider } from '@mosimi/shared'
+import { AuthProvider, BookingProvider, useAuth } from '@mosimi/shared'
 import { AppShell } from './components/AppShell'
 import { HomePage } from './pages/HomePage'
 import { ServicesPage } from './pages/ServicesPage'
@@ -9,8 +9,25 @@ import { DetailPage } from './pages/DetailPage'
 import { HistoryPage } from './pages/HistoryPage'
 import { ChatPage } from './pages/ChatPage'
 import { MyPage } from './pages/MyPage'
+import { CustomerLoginPage } from './pages/LoginPage'
+import { PaymentFailPage, PaymentSuccessPage } from './pages/PaymentResultPage'
 
-export default function App() {
+function AuthedApp() {
+  const { user, loading } = useAuth()
+  if (loading) {
+    return (
+      <div className="app-shell">
+        <div className="phone-frame">
+          <div className="page matching-page">
+            <p className="brand-inline">모시미+</p>
+            <p className="muted">불러오는 중…</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+  if (!user) return <CustomerLoginPage />
+
   return (
     <BookingProvider>
       <HashRouter>
@@ -24,10 +41,20 @@ export default function App() {
             <Route path="history" element={<HistoryPage />} />
             <Route path="chat" element={<ChatPage />} />
             <Route path="me" element={<MyPage />} />
+            <Route path="payment/success" element={<PaymentSuccessPage />} />
+            <Route path="payment/fail" element={<PaymentFailPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Routes>
       </HashRouter>
     </BookingProvider>
+  )
+}
+
+export default function App() {
+  return (
+    <AuthProvider expectedRole="customer">
+      <AuthedApp />
+    </AuthProvider>
   )
 }

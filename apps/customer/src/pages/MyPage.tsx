@@ -1,13 +1,26 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useBooking } from '@mosimi/shared'
+import { enableWebPush, useAuth, useBooking } from '@mosimi/shared'
 import { MANAGER_APP_URL } from '../config'
 
 export function MyPage() {
+  const { user, logout } = useAuth()
   const { bookings } = useBooking()
   const completed = bookings.filter((b) => b.status === 'completed').length
   const active = bookings.filter((b) =>
     ['matched', 'confirmed', 'in_progress', 'matching'].includes(b.status),
   ).length
+  const [pushMsg, setPushMsg] = useState<string | null>(null)
+
+  const onEnablePush = async () => {
+    setPushMsg(null)
+    try {
+      await enableWebPush()
+      setPushMsg('푸시 알림이 활성화되었습니다.')
+    } catch (e) {
+      setPushMsg(e instanceof Error ? e.message : '푸시 활성화 실패')
+    }
+  }
 
   return (
     <div className="page">
@@ -17,10 +30,10 @@ export function MyPage() {
       </header>
 
       <section className="profile-block">
-        <div className="avatar large">김</div>
+        <div className="avatar large">{user?.name?.slice(0, 1) ?? '고'}</div>
         <div>
-          <h2>김모시 님</h2>
-          <p className="muted">데모 계정 · 010-1234-5678</p>
+          <h2>{user?.name ?? '고객'} 님</h2>
+          <p className="muted">{user?.email}</p>
         </div>
       </section>
 
@@ -50,13 +63,28 @@ export function MyPage() {
           <Link to="/chat">고객 상담</Link>
         </li>
         <li>
+          <button
+            type="button"
+            className="linkish"
+            onClick={() => void onEnablePush()}
+          >
+            푸시 알림 켜기
+          </button>
+        </li>
+        <li>
           <a href={MANAGER_APP_URL}>매니저 앱 열기</a>
+        </li>
+        <li>
+          <button type="button" className="linkish" onClick={logout}>
+            로그아웃
+          </button>
         </li>
       </ul>
 
+      {pushMsg && <p className="demo-note">{pushMsg}</p>}
+
       <p className="demo-note">
-        고객용 모시미+ 데모입니다. 매니저 배정은 별도 매니저 앱에서 수락하면
-        반영됩니다.
+        고객용 모시미+ — 예약·매칭·결제·푸시는 백엔드 API와 연동됩니다.
       </p>
     </div>
   )

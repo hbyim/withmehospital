@@ -1,0 +1,30 @@
+{
+  "name": "@mosimi/api",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "start": "tsx src/index.ts",
+    "db:seed": "tsx src/seed.ts",
+    "db:reset": "tsx src/seed.ts"
+  },
+  "dependencies": {
+    "@hono/node-server": "^2.1.0",
+    "bcryptjs": "^3.0.3",
+    "dotenv": "^17.4.2",
+    "hono": "^4.13.1",
+    "jose": "^6.2.8",
+    "pg": "^8.22.0",
+    "web-push": "^3.6.7",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/node": "^24.13.3",
+    "@types/pg": "^8.20.4",
+    "@types/web-push": "^3.6.4",
+    "tsx": "^4.23.11",
+    "typescript": "^6.0.3"
+  }
+}

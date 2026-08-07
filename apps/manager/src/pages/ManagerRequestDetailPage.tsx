@@ -25,12 +25,12 @@ export function ManagerRequestDetailPage() {
   const alreadyTaken =
     Boolean(booking.manager) || booking.status !== 'matching'
 
-  function onAccept() {
+  async function onAccept() {
     if (!session.online) {
       setError('수신 중지 상태에서는 수락할 수 없습니다.')
       return
     }
-    const ok = acceptBooking(booking!.id, manager)
+    const ok = await acceptBooking(booking!.id, manager)
     if (!ok) {
       setError('이미 다른 매니저가 수락했거나 취소된 요청입니다.')
       return
@@ -38,8 +38,8 @@ export function ManagerRequestDetailPage() {
     navigate(`/jobs/${booking!.id}`, { replace: true })
   }
 
-  function onDecline() {
-    declineRequest(booking!.id)
+  async function onDecline() {
+    await declineRequest(booking!.id)
     navigate('/requests')
   }
 

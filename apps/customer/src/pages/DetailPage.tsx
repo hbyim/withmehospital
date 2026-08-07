@@ -1,5 +1,11 @@
+import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { formatPrice, useBooking, type BookingStatus } from '@mosimi/shared'
+import {
+  formatPrice,
+  startBookingPayment,
+  useBooking,
+  type BookingStatus,
+} from '@mosimi/shared'
 import { MANAGER_APP_URL } from '../config'
 
 const statusLabel: Record<BookingStatus, string> = {
@@ -15,8 +21,10 @@ const statusLabel: Record<BookingStatus, string> = {
 export function DetailPage() {
   const { bookingId } = useParams()
   const navigate = useNavigate()
-  const { bookings, updateBooking } = useBooking()
+  const { bookings, updateBooking, refreshBookings } = useBooking()
   const booking = bookings.find((b) => b.id === bookingId)
+  const [paying, setPaying] = useState(false)
+  const [payError, setPayError] = useState<string | null>(null)
 
   if (!booking) {
     return (
@@ -25,6 +33,26 @@ export function DetailPage() {
         <Link to="/history">내역으로</Link>
       </div>
     )
+  }
+
+  const canPay =
+    ['matched', 'confirmed', 'in_progress', 'completed'].includes(
+      booking.status,
+    ) && booking.paymentStatus !== 'paid'
+
+  const onPay = async () => {
+    setPaying(true)
+    setPayError(null)
+    try {
+      const result = await startBookingPayment(booking.id)
+      if (result?.booking) {
+        await refreshBookings()
+      }
+    } catch (e) {
+      setPayError(e instanceof Error ? e.message : '결제 실패')
+    } finally {
+      setPaying(false)
+    }
   }
 
   return (
@@ -54,6 +82,14 @@ export function DetailPage() {
         <p>이용 대상: {booking.careTarget}</p>
         {booking.note && <p>요청: {booking.note}</p>}
         <strong className="price">{formatPrice(booking.price)}</strong>
+        <p className="muted small">
+          결제:{' '}
+          {booking.paymentStatus === 'paid'
+            ? '완료'
+            : booking.paymentStatus === 'pending'
+              ? '진행 중'
+              : '미결제'}
+        </p>
       </section>
 
       {booking.manager && (
@@ -106,8 +142,22 @@ export function DetailPage() {
         {booking.status === 'in_progress' && (
           <p className="muted small">서비스가 진행 중입니다.</p>
         )}
-        {booking.status === 'completed' && (
-          <p className="muted small">이용이 완료되었습니다.</p>
+        {booking.status === 'completed' && booking.paymentStatus !== 'paid' && (
+          <p className="muted small">이용이 완료되었습니다. 결제를 진행해 주세요.</p>
+        )}
+        {canPay && (
+          <button
+            type="button"
+            className="btn primary block"
+            disabled={paying}
+            onClick={() => void onPay()}
+          >
+            {paying ? '결제 진행 중…' : `${formatPrice(booking.price)} 결제하기`}
+          </button>
+        )}
+        {payError && <p className="muted small">{payError}</p>}
+        {booking.paymentStatus === 'paid' && (
+          <p className="muted small">결제가 완료되었습니다.</p>
         )}
         {!['completed', 'cancelled'].includes(booking.status) && (
           <button

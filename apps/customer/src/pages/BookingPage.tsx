@@ -37,9 +37,9 @@ export function BookingPage() {
     )
   }
 
-  function onSubmit(e: FormEvent) {
+  async function onSubmit(e: FormEvent) {
     e.preventDefault()
-    const booking = createBooking()
+    const booking = await createBooking()
     if (!booking) return
     resetDraft()
     navigate(`/matching/${booking.id}`)
