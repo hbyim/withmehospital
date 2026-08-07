@@ -19,10 +19,11 @@ export function configureAuthStorage(key: string) {
 }
 
 export function getApiBase() {
-  return (
-    import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, '') ||
-    'http://localhost:8787'
-  )
+  const configured = import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, '')
+  if (configured) return configured
+  // 로컬 개발: Vite 프록시로 same-origin 호출 (CORS/Load failed 방지)
+  if (import.meta.env.DEV) return ''
+  return 'http://127.0.0.1:8787'
 }
 
 export function getToken() {
@@ -42,6 +43,18 @@ export class ApiClientError extends Error {
   }
 }
 
+function networkErrorMessage(err: unknown) {
+  const raw = err instanceof Error ? err.message : String(err)
+  if (
+    /load failed|failed to fetch|networkerror|network request failed|fetch failed/i.test(
+      raw,
+    )
+  ) {
+    return 'API 서버에 연결할 수 없습니다. 터미널에서 `npm run dev:api`가 실행 중인지 확인해 주세요.'
+  }
+  return raw || 'Request failed'
+}
+
 export async function api<T>(
   path: string,
   init: RequestInit = {},
@@ -53,10 +66,15 @@ export async function api<T>(
   const token = getToken()
   if (token) headers.set('Authorization', `Bearer ${token}`)
 
-  const res = await fetch(`${getApiBase()}${path}`, {
-    ...init,
-    headers,
-  })
+  let res: Response
+  try {
+    res = await fetch(`${getApiBase()}${path}`, {
+      ...init,
+      headers,
+    })
+  } catch (err) {
+    throw new ApiClientError(0, networkErrorMessage(err))
+  }
 
   const data = await res.json().catch(() => ({}))
   if (!res.ok) {

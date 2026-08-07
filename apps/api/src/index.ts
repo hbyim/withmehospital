@@ -25,10 +25,21 @@ const origins = (process.env.CORS_ORIGIN || '*')
   .map((s) => s.trim())
   .filter(Boolean)
 
+const localDevOrigin =
+  /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i
+
+function resolveCorsOrigin(origin: string) {
+  if (origins.includes('*')) return origin || '*'
+  if (origins.includes(origin)) return origin
+  // localhost / 127.0.0.1 포트 차이는 로컬 개발에서 허용
+  if (localDevOrigin.test(origin)) return origin
+  return origins[0] ?? origin
+}
+
 app.use(
   '*',
   cors({
-    origin: origins.includes('*') ? '*' : origins,
+    origin: (origin) => (origin ? resolveCorsOrigin(origin) : '*'),
     allowHeaders: ['Content-Type', 'Authorization'],
     allowMethods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
   }),

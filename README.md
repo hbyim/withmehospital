@@ -75,7 +75,8 @@ npm run dev:manager
 | `TOSS_CLIENT_KEY` / `TOSS_SECRET_KEY` | 설정 시 Toss PG, 없으면 stub |
 | `VAPID_*` | Web Push (없으면 서버 콘솔 stub 로그) |
 
-프론트는 `VITE_API_BASE_URL` (기본 `http://localhost:8787`)을 사용합니다.
+프론트는 로컬 개발 시 Vite 프록시(`/api` → `:8787`)를 사용합니다.  
+필요하면 `VITE_API_BASE_URL`로 API 주소를 직접 지정할 수 있습니다.
 
 ### VAPID 키 생성
 
