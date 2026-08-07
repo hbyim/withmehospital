@@ -1,18 +1,15 @@
 import { Link } from 'react-router-dom'
-import { formatPrice } from '@mosimi/shared'
-import { useBooking, type BookingStatus } from '@mosimi/shared'
-import { useManager } from '@mosimi/shared'
-
-const label: Partial<Record<BookingStatus, string>> = {
-  matched: '배정됨',
-  confirmed: '고객 확정',
-  in_progress: '진행 중',
-  completed: '완료',
-  cancelled: '취소',
-}
+import {
+  bookingStatusLabel,
+  formatPrice,
+  paymentStatusLabel,
+  useBooking,
+  useManager,
+  type BookingStatus,
+} from '@mosimi/shared'
 
 export function ManagerJobsPage() {
-  const { bookings } = useBooking()
+  const { bookings, loading, error } = useBooking()
   const { manager } = useManager()
   const myJobs = bookings.filter((b) => b.manager?.id === manager.id)
 
@@ -31,7 +28,11 @@ export function ManagerJobsPage() {
         <p className="muted">수락·배정된 서비스 일정을 관리합니다.</p>
       </header>
 
-      {myJobs.length === 0 ? (
+      {error && <p className="form-error">{error}</p>}
+
+      {loading && myJobs.length === 0 ? (
+        <p className="muted">불러오는 중…</p>
+      ) : myJobs.length === 0 ? (
         <div className="empty">
           <p>아직 배정된 일정이 없습니다.</p>
           <Link to="/requests" className="btn primary">
@@ -53,13 +54,16 @@ export function ManagerJobsPage() {
                         <div className="row-top">
                           <strong>{b.service.name}</strong>
                           <span className={`badge ${b.status}`}>
-                            {label[b.status]}
+                            {bookingStatusLabel[b.status as BookingStatus]}
                           </span>
                         </div>
                         <p>
                           {b.date} {b.time} · {b.destination}
                         </p>
-                        <p className="muted">{formatPrice(b.price)}</p>
+                        <p className="muted">
+                          {formatPrice(b.price)} ·{' '}
+                          {paymentStatusLabel[b.paymentStatus ?? 'unpaid']}
+                        </p>
                       </div>
                       <span className="chevron">›</span>
                     </Link>
@@ -82,11 +86,12 @@ export function ManagerJobsPage() {
                         <div className="row-top">
                           <strong>{b.service.name}</strong>
                           <span className={`badge ${b.status}`}>
-                            {label[b.status]}
+                            {bookingStatusLabel[b.status as BookingStatus]}
                           </span>
                         </div>
                         <p>
-                          {b.date} {b.time}
+                          {b.date} {b.time} ·{' '}
+                          {paymentStatusLabel[b.paymentStatus ?? 'unpaid']}
                         </p>
                       </div>
                       <span className="chevron">›</span>

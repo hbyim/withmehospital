@@ -3,9 +3,9 @@ import { formatPrice, useBooking, useManager } from '@mosimi/shared'
 import { CUSTOMER_APP_URL } from '../config'
 
 export function ManagerRequestsPage() {
-  const { openRequests } = useBooking()
-  const { session, isDeclined } = useManager()
-  const list = openRequests.filter((b) => !isDeclined(b.id))
+  const { openRequests, loading, error } = useBooking()
+  const { session, setOnline } = useManager()
+  const list = session.online ? openRequests : []
 
   return (
     <div className="page">
@@ -17,10 +17,21 @@ export function ManagerRequestsPage() {
         </p>
       </header>
 
+      {error && <p className="form-error">{error}</p>}
+
       {!session.online ? (
         <div className="empty">
-          <p>수신 중지 상태입니다. 홈에서 수신을 켜 주세요.</p>
+          <p>수신 중지 상태입니다. 수신을 켜 주세요.</p>
+          <button
+            type="button"
+            className="btn primary"
+            onClick={() => void setOnline(true)}
+          >
+            수신 켜기
+          </button>
         </div>
+      ) : loading && list.length === 0 ? (
+        <p className="muted">불러오는 중…</p>
       ) : list.length === 0 ? (
         <div className="empty">
           <p>대기 중인 요청이 없습니다.</p>

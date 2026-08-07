@@ -56,7 +56,7 @@ function AuthedApp() {
 
 export default function App() {
   return (
-    <AuthProvider expectedRole="manager">
+    <AuthProvider expectedRole="manager" storageKey="mosimi-auth-token-manager">
       <AuthedApp />
     </AuthProvider>
   )

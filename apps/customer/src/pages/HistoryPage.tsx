@@ -1,29 +1,26 @@
 import { Link } from 'react-router-dom'
-import { formatPrice } from '@mosimi/shared'
-import { useBooking, type BookingStatus } from '@mosimi/shared'
-
-const label: Record<BookingStatus, string> = {
-  draft: '작성 중',
-  matching: '매칭 중',
-  matched: '배정됨',
-  confirmed: '확정',
-  in_progress: '진행 중',
-  completed: '완료',
-  cancelled: '취소',
-}
+import {
+  bookingStatusLabel,
+  formatPrice,
+  paymentStatusLabel,
+  useBooking,
+} from '@mosimi/shared'
 
 export function HistoryPage() {
-  const { bookings } = useBooking()
+  const { bookings, loading, error } = useBooking()
 
   return (
     <div className="page">
       <header className="page-header">
         <p className="brand-inline">모시미+</p>
         <h1>이용 내역</h1>
-        <p className="muted">신청·매칭·진행 상태를 한곳에서 확인하세요.</p>
+        <p className="muted">신청·매칭·진행·결제 상태를 한곳에서 확인하세요.</p>
       </header>
 
-      {bookings.length === 0 ? (
+      {error && <p className="form-error">{error}</p>}
+      {loading && bookings.length === 0 ? (
+        <p className="muted">불러오는 중…</p>
+      ) : bookings.length === 0 ? (
         <div className="empty">
           <p>아직 예약이 없습니다.</p>
           <Link to="/services" className="btn primary">
@@ -39,7 +36,7 @@ export function HistoryPage() {
                   <div className="row-top">
                     <strong>{b.service.name}</strong>
                     <span className={`badge ${b.status}`}>
-                      {label[b.status]}
+                      {bookingStatusLabel[b.status]}
                     </span>
                   </div>
                   <p>
@@ -47,7 +44,10 @@ export function HistoryPage() {
                   </p>
                   <p className="muted">
                     {b.manager ? `${b.manager.name} 매니저` : '매니저 배정 대기'}{' '}
-                    · {formatPrice(b.price)}
+                    · {formatPrice(b.price)} ·{' '}
+                    <span className={`badge pay-${b.paymentStatus ?? 'unpaid'}`}>
+                      {paymentStatusLabel[b.paymentStatus ?? 'unpaid']}
+                    </span>
                   </p>
                 </div>
                 <span className="chevron">›</span>

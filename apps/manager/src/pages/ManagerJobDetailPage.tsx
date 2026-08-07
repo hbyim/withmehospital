@@ -1,32 +1,79 @@
+import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { formatPrice } from '@mosimi/shared'
-import { useBooking, type BookingStatus } from '@mosimi/shared'
-import { useManager } from '@mosimi/shared'
-
-const statusLabel: Record<BookingStatus, string> = {
-  draft: '작성 중',
-  matching: '매칭 중',
-  matched: '배정됨 (고객 확정 대기)',
-  confirmed: '고객 확정',
-  in_progress: '서비스 진행 중',
-  completed: '이용 완료',
-  cancelled: '취소됨',
-}
+import {
+  ApiClientError,
+  bookingStatusLabel,
+  formatPrice,
+  paymentStatusLabel,
+  useBooking,
+  useManager,
+} from '@mosimi/shared'
 
 export function ManagerJobDetailPage() {
   const { bookingId } = useParams()
   const navigate = useNavigate()
-  const { bookings, updateBooking } = useBooking()
+  const { bookings, loading, updateBooking, getBooking } = useBooking()
   const { manager } = useManager()
-  const booking = bookings.find((b) => b.id === bookingId)
+  const [booking, setBooking] = useState(
+    () => bookings.find((b) => b.id === bookingId) ?? null,
+  )
+  const [error, setError] = useState<string | null>(null)
+  const [pending, setPending] = useState(false)
+
+  useEffect(() => {
+    const local = bookings.find((b) => b.id === bookingId)
+    if (local) setBooking(local)
+  }, [bookings, bookingId])
+
+  useEffect(() => {
+    if (!bookingId || booking) return
+    let cancelled = false
+    void getBooking(bookingId)
+      .then((b) => {
+        if (!cancelled) setBooking(b)
+      })
+      .catch((e) => {
+        if (!cancelled) {
+          setError(e instanceof Error ? e.message : '일정을 불러오지 못했습니다.')
+        }
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [bookingId, booking, getBooking])
+
+  if (loading && !booking) {
+    return (
+      <div className="page">
+        <p className="muted">불러오는 중…</p>
+      </div>
+    )
+  }
 
   if (!booking || booking.manager?.id !== manager.id) {
     return (
       <div className="page">
-        <p>일정을 찾을 수 없거나 권한이 없습니다.</p>
+        <p>{error || '일정을 찾을 수 없거나 권한이 없습니다.'}</p>
         <Link to="/jobs">내 일정으로</Link>
       </div>
     )
+  }
+
+  const onStatus = async (status: 'in_progress' | 'completed' | 'cancelled') => {
+    setPending(true)
+    setError(null)
+    try {
+      const next = await updateBooking(booking.id, { status })
+      setBooking(next)
+    } catch (e) {
+      setError(
+        e instanceof ApiClientError || e instanceof Error
+          ? e.message
+          : '상태 변경 실패',
+      )
+    } finally {
+      setPending(false)
+    }
   }
 
   return (
@@ -46,7 +93,7 @@ export function ManagerJobDetailPage() {
       </header>
 
       <div className={`status-pill ${booking.status}`}>
-        {statusLabel[booking.status]}
+        {bookingStatusLabel[booking.status]}
       </div>
 
       <section className="detail-block">
@@ -62,9 +109,16 @@ export function ManagerJobDetailPage() {
         </p>
         {booking.note && <p>요청: {booking.note}</p>}
         <strong className="price">{formatPrice(booking.price)}</strong>
+        <p className="muted small">
+          결제:{' '}
+          <span className={`badge pay-${booking.paymentStatus ?? 'unpaid'}`}>
+            {paymentStatusLabel[booking.paymentStatus ?? 'unpaid']}
+          </span>
+        </p>
       </section>
 
       <div className="action-stack">
+        {error && <p className="form-error">{error}</p>}
         {booking.status === 'matched' && (
           <p className="muted small">
             고객이 앱에서 예약을 확정하면 서비스 준비가 완료됩니다.
@@ -74,34 +128,35 @@ export function ManagerJobDetailPage() {
           <button
             type="button"
             className="btn primary block"
-            onClick={() =>
-              updateBooking(booking.id, { status: 'in_progress' })
-            }
+            disabled={pending}
+            onClick={() => void onStatus('in_progress')}
           >
-            서비스 시작
+            {pending ? '처리 중…' : '서비스 시작'}
           </button>
         )}
         {booking.status === 'in_progress' && (
           <button
             type="button"
             className="btn primary block"
-            onClick={() =>
-              updateBooking(booking.id, { status: 'completed' })
-            }
+            disabled={pending}
+            onClick={() => void onStatus('completed')}
           >
-            서비스 완료 처리
+            {pending ? '처리 중…' : '서비스 완료 처리'}
           </button>
         )}
         {booking.status === 'completed' && (
-          <div className="empty soft">완료된 일정입니다. 수고하셨습니다.</div>
+          <div className="empty soft">
+            {booking.paymentStatus === 'paid'
+              ? '완료·결제된 일정입니다. 수고하셨습니다.'
+              : '완료되었습니다. 고객 결제를 기다리고 있습니다.'}
+          </div>
         )}
         {!['completed', 'cancelled'].includes(booking.status) && (
           <button
             type="button"
             className="btn ghost block"
-            onClick={() =>
-              updateBooking(booking.id, { status: 'cancelled', manager })
-            }
+            disabled={pending}
+            onClick={() => void onStatus('cancelled')}
           >
             일정 취소
           </button>

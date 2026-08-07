@@ -13,7 +13,8 @@ export function AppShell() {
   const hideNav =
     location.pathname.includes('/booking') ||
     location.pathname.includes('/matching') ||
-    location.pathname.includes('/detail')
+    location.pathname.includes('/detail') ||
+    location.pathname.includes('/payment')
 
   return (
     <div className="app-shell">

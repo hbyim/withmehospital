@@ -14,7 +14,7 @@ import {
   type BookingRow,
   type BookingStatus,
 } from '../lib/models'
-import { sendPushToUser } from '../lib/push'
+import { sendPushToUser, appDeepLink } from '../lib/push'
 import { createPaymentReady } from '../lib/payments'
 
 const createSchema = z.object({
@@ -155,7 +155,7 @@ bookingRoutes.post('/', requireRoles('customer'), async (c) => {
       sendPushToUser(m.user_id, {
         title: '새 서비스 요청',
         body: `${service.name} · ${body.date} ${body.time}`,
-        url: '/#/requests',
+        url: appDeepLink('manager', '/requests'),
         data: { bookingId: id },
       }),
     ),
@@ -217,7 +217,7 @@ bookingRoutes.post('/:id/accept', requireRoles('manager'), async (c) => {
   await sendPushToUser(updated.customer_id, {
     title: '매니저가 배정되었습니다',
     body: `${user.name} 매니저가 요청을 수락했습니다.`,
-    url: `/#/detail/${updated.id}`,
+    url: appDeepLink('customer', `/detail/${updated.id}`),
     data: { bookingId: updated.id },
   })
 
@@ -295,7 +295,7 @@ bookingRoutes.patch('/:id/status', async (c) => {
     await sendPushToUser(updated.manager_id, {
       title: '고객이 예약을 확정했습니다',
       body: `${updated.date} ${updated.time} 일정이 확정되었습니다.`,
-      url: `/#/jobs/${updated.id}`,
+      url: appDeepLink('manager', `/jobs/${updated.id}`),
     })
   }
   if (updated?.customer_id && user.role === 'manager') {
@@ -303,14 +303,14 @@ bookingRoutes.patch('/:id/status', async (c) => {
       await sendPushToUser(updated.customer_id, {
         title: '서비스가 시작되었습니다',
         body: '매니저가 서비스를 시작했습니다.',
-        url: `/#/detail/${updated.id}`,
+        url: appDeepLink('customer', `/detail/${updated.id}`),
       })
     }
     if (next === 'completed') {
       await sendPushToUser(updated.customer_id, {
         title: '서비스가 완료되었습니다',
         body: '결제를 진행해 주세요.',
-        url: `/#/detail/${updated.id}`,
+        url: appDeepLink('customer', `/detail/${updated.id}`),
       })
     }
   }

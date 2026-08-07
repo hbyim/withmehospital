@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { useAuth, ApiClientError } from '@mosimi/shared'
+import { MANAGER_APP_URL } from '../config'
 
 export function CustomerLoginPage() {
   const { login, registerCustomer } = useAuth()
@@ -35,7 +36,7 @@ export function CustomerLoginPage() {
           <header className="page-header">
             <p className="brand-inline">모시미+</p>
             <h1>{mode === 'login' ? '고객 로그인' : '고객 회원가입'}</h1>
-            <p className="muted">상용 API 연동 데모 계정으로 시작할 수 있습니다.</p>
+            <p className="muted">API 연동 계정으로 예약·결제를 이용합니다.</p>
           </header>
 
           <form className="booking-form" onSubmit={onSubmit}>
@@ -77,6 +78,10 @@ export function CustomerLoginPage() {
           >
             {mode === 'login' ? '회원가입' : '로그인으로'}
           </button>
+
+          <a href={MANAGER_APP_URL} className="text-link center-link">
+            매니저이신가요? 매니저 앱에서 로그인 →
+          </a>
 
           <p className="demo-note">
             시드 계정: customer@mosimi.local / customer123

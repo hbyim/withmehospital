@@ -12,9 +12,30 @@ const tips = [
 export function MatchingPage() {
   const { bookingId } = useParams()
   const navigate = useNavigate()
-  const { bookings } = useBooking()
-  const booking = bookings.find((b) => b.id === bookingId)
+  const { bookings, loading, getBooking } = useBooking()
+  const [booking, setBooking] = useState(
+    () => bookings.find((b) => b.id === bookingId) ?? null,
+  )
   const [tipIndex, setTipIndex] = useState(0)
+  const [waited, setWaited] = useState(0)
+
+  useEffect(() => {
+    const local = bookings.find((b) => b.id === bookingId)
+    if (local) setBooking(local)
+  }, [bookings, bookingId])
+
+  useEffect(() => {
+    if (!bookingId || booking) return
+    let cancelled = false
+    void getBooking(bookingId)
+      .then((b) => {
+        if (!cancelled) setBooking(b)
+      })
+      .catch(() => undefined)
+    return () => {
+      cancelled = true
+    }
+  }, [bookingId, booking, getBooking])
 
   useEffect(() => {
     if (!booking) return
@@ -24,11 +45,25 @@ export function MatchingPage() {
   }, [booking, navigate])
 
   useEffect(() => {
-    const id = window.setInterval(() => {
+    const tipId = window.setInterval(() => {
       setTipIndex((i) => (i + 1) % tips.length)
     }, 2200)
-    return () => clearInterval(id)
+    const waitId = window.setInterval(() => {
+      setWaited((s) => s + 1)
+    }, 1000)
+    return () => {
+      clearInterval(tipId)
+      clearInterval(waitId)
+    }
   }, [])
+
+  if (loading && !booking) {
+    return (
+      <div className="page matching-page">
+        <p className="muted">불러오는 중…</p>
+      </div>
+    )
+  }
 
   if (!booking) {
     return (
@@ -58,6 +93,7 @@ export function MatchingPage() {
       <p className="match-tip animate-fade-up" key={tipIndex}>
         {tips[tipIndex]}
       </p>
+      <p className="muted small center">대기 {waited}초</p>
 
       <ol className="match-steps">
         <li className="done">

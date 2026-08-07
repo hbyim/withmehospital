@@ -1224,7 +1224,52 @@ button {
   color: #9a6b00;
 }
 
+.badge.matched {
+  background: #e8f5f3;
+  color: #1a7a72;
+}
+
+.badge.confirmed {
+  background: #e7f0ff;
+  color: #2d6a9f;
+}
+
 .badge.in_progress {
+  background: #e4ebf5;
+  color: #2f4f7a;
+}
+
+.badge.pay-unpaid {
+  background: #f5ebe6;
+  color: #8a4b2f;
+}
+
+.badge.pay-pending {
+  background: #fff3d6;
+  color: #9a6b00;
+}
+
+.badge.pay-paid {
+  background: #e8f5e9;
+  color: #2e7d4f;
+}
+
+.badge.pay-refunded {
+  background: #eee;
+  color: #666;
+}
+
+.status-pill.matched {
+  background: #e8f5f3;
+  color: #1a7a72;
+}
+
+.status-pill.confirmed {
+  background: #e7f0ff;
+  color: #2d6a9f;
+}
+
+.status-pill.in_progress {
   background: #e4ebf5;
   color: #2f4f7a;
 }

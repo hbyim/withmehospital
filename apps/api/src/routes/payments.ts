@@ -10,7 +10,7 @@ import {
 import { queryOne } from '../db'
 import type { BookingRow } from '../lib/models'
 import { mapBooking } from '../lib/models'
-import { sendPushToUser } from '../lib/push'
+import { sendPushToUser, appDeepLink } from '../lib/push'
 
 export const paymentRoutes = new Hono<AppEnv>()
 
@@ -53,7 +53,7 @@ paymentRoutes.post(
       await sendPushToUser(booking.manager_id, {
         title: '결제 완료',
         body: `고객이 ${booking.price.toLocaleString('ko-KR')}원 결제를 완료했습니다.`,
-        url: `/#/jobs/${booking.id}`,
+        url: appDeepLink('manager', `/jobs/${booking.id}`),
       })
     }
 

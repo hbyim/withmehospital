@@ -1,12 +1,11 @@
 import { Link } from 'react-router-dom'
-import { formatPrice, useBooking, useManager } from '@mosimi/shared'
+import { formatPrice, paymentStatusLabel, useBooking, useManager } from '@mosimi/shared'
 import { CUSTOMER_APP_URL } from '../config'
 
 export function ManagerHomePage() {
-  const { bookings, openRequests } = useBooking()
-  const { manager, session, setOnline, isDeclined } = useManager()
+  const { bookings, openRequests, error } = useBooking()
+  const { manager, session, setOnline } = useManager()
 
-  const visibleOpen = openRequests.filter((b) => !isDeclined(b.id))
   const myJobs = bookings.filter(
     (b) =>
       b.manager?.id === manager.id &&
@@ -14,10 +13,14 @@ export function ManagerHomePage() {
   )
   const today = new Date().toISOString().slice(0, 10)
   const todayJobs = myJobs.filter((b) => b.date === today)
-  const completed = bookings.filter(
-    (b) => b.manager?.id === manager.id && b.status === 'completed',
+  const paidCompleted = bookings.filter(
+    (b) =>
+      b.manager?.id === manager.id &&
+      b.status === 'completed' &&
+      b.paymentStatus === 'paid',
   )
-  const earned = completed.reduce((sum, b) => sum + b.price, 0)
+  const earned = paidCompleted.reduce((sum, b) => sum + b.price, 0)
+  const visibleOpen = session.online ? openRequests : []
 
   return (
     <div className="page manager-home">
@@ -44,6 +47,8 @@ export function ManagerHomePage() {
         </p>
       </header>
 
+      {error && <p className="form-error">{error}</p>}
+
       <section className="stat-row manager-stats">
         <div>
           <strong>{visibleOpen.length}</strong>
@@ -55,7 +60,7 @@ export function ManagerHomePage() {
         </div>
         <div>
           <strong>{(earned / 10000).toFixed(1)}만</strong>
-          <span>완료 수익</span>
+          <span>결제완료 수익</span>
         </div>
       </section>
 
@@ -65,7 +70,17 @@ export function ManagerHomePage() {
           <Link to="/requests">전체</Link>
         </div>
         {!session.online ? (
-          <div className="empty soft">수신 중지로 새 요청이 숨겨져 있습니다.</div>
+          <div className="empty soft">
+            <p>수신이 꺼져 있습니다.</p>
+            <button
+              type="button"
+              className="btn primary"
+              style={{ marginTop: 12 }}
+              onClick={() => void setOnline(true)}
+            >
+              수신 켜기
+            </button>
+          </div>
         ) : visibleOpen.length === 0 ? (
           <div className="empty soft">현재 수락 가능한 요청이 없습니다.</div>
         ) : (
@@ -119,6 +134,11 @@ export function ManagerHomePage() {
                     <p>
                       {b.date} {b.time} · {b.destination}
                     </p>
+                    {b.paymentStatus && (
+                      <p className="muted small">
+                        {paymentStatusLabel[b.paymentStatus]}
+                      </p>
+                    )}
                   </div>
                   <span className="chevron">›</span>
                 </Link>

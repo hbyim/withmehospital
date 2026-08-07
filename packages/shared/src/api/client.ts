@@ -11,7 +11,12 @@ export type ApiError = {
   details?: unknown
 }
 
-const TOKEN_KEY = 'mosimi-auth-token'
+let tokenKey = 'mosimi-auth-token'
+
+/** 고객/매니저 앱이 같은 origin에서 토큰이 덮이지 않도록 분리 */
+export function configureAuthStorage(key: string) {
+  tokenKey = key
+}
 
 export function getApiBase() {
   return (
@@ -21,12 +26,12 @@ export function getApiBase() {
 }
 
 export function getToken() {
-  return localStorage.getItem(TOKEN_KEY)
+  return localStorage.getItem(tokenKey)
 }
 
 export function setToken(token: string | null) {
-  if (token) localStorage.setItem(TOKEN_KEY, token)
-  else localStorage.removeItem(TOKEN_KEY)
+  if (token) localStorage.setItem(tokenKey, token)
+  else localStorage.removeItem(tokenKey)
 }
 
 export class ApiClientError extends Error {

@@ -9,6 +9,7 @@ import {
 } from 'react'
 import {
   api,
+  configureAuthStorage,
   getToken,
   setToken,
   type ApiUser,
@@ -46,13 +47,20 @@ const AuthContext = createContext<AuthState | null>(null)
 export function AuthProvider({
   children,
   expectedRole,
+  storageKey = 'mosimi-auth-token',
 }: {
   children: ReactNode
   expectedRole?: 'customer' | 'manager'
+  storageKey?: string
 }) {
+  configureAuthStorage(storageKey)
+
   const [user, setUser] = useState<ApiUser | null>(null)
   const [manager, setManager] = useState<Manager | null>(null)
-  const [token, setTokenState] = useState<string | null>(() => getToken())
+  const [token, setTokenState] = useState<string | null>(() => {
+    configureAuthStorage(storageKey)
+    return getToken()
+  })
   const [loading, setLoading] = useState(true)
 
   const applySession = useCallback(
@@ -64,15 +72,17 @@ export function AuthProvider({
             : '고객 계정으로 로그인해 주세요.',
         )
       }
+      configureAuthStorage(storageKey)
       setToken(next.token)
       setTokenState(next.token)
       setUser(next.user)
       setManager(next.manager ?? null)
     },
-    [expectedRole],
+    [expectedRole, storageKey],
   )
 
   const refreshMe = useCallback(async () => {
+    configureAuthStorage(storageKey)
     const t = getToken()
     if (!t) {
       setUser(null)
@@ -100,7 +110,7 @@ export function AuthProvider({
     } finally {
       setLoading(false)
     }
-  }, [expectedRole])
+  }, [expectedRole, storageKey])
 
   useEffect(() => {
     void refreshMe()
@@ -139,6 +149,7 @@ export function AuthProvider({
         await refreshMe()
       },
       logout: () => {
+        configureAuthStorage(storageKey)
         setToken(null)
         setTokenState(null)
         setUser(null)
@@ -146,7 +157,7 @@ export function AuthProvider({
       },
       refreshMe,
     }),
-    [user, manager, token, loading, applySession, refreshMe],
+    [user, manager, token, loading, applySession, refreshMe, storageKey],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

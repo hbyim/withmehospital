@@ -1,16 +1,17 @@
 import { Link } from 'react-router-dom'
 import {
-  companionServices,
-  careServices,
   formatPrice,
+  paymentStatusLabel,
   ServiceIcon,
   useBooking,
+  useServices,
 } from '@mosimi/shared'
 
 export function HomePage() {
-  const { bookings } = useBooking()
-  const upcoming = bookings.find(
-    (b) => b.status === 'confirmed' || b.status === 'matched',
+  const { bookings, error } = useBooking()
+  const { companionServices, careServices, loading } = useServices()
+  const upcoming = bookings.find((b) =>
+    ['confirmed', 'matched', 'in_progress'].includes(b.status),
   )
 
   return (
@@ -36,6 +37,8 @@ export function HomePage() {
         </div>
       </header>
 
+      {error && <p className="form-error">{error}</p>}
+
       {upcoming && (
         <section className="section upcoming-banner animate-fade-up delay-3">
           <div>
@@ -46,6 +49,9 @@ export function HomePage() {
             <p>
               {upcoming.manager?.name ?? '매니저 배정 중'} ·{' '}
               {upcoming.destination}
+              {upcoming.paymentStatus && upcoming.paymentStatus !== 'paid' ? (
+                <> · {paymentStatusLabel[upcoming.paymentStatus]}</>
+              ) : null}
             </p>
           </div>
           <Link to={`/detail/${upcoming.id}`} className="text-link">
@@ -59,21 +65,25 @@ export function HomePage() {
           <h2>동행 서비스</h2>
           <Link to="/services?tab=companion">전체</Link>
         </div>
-        <div className="service-rail">
-          {companionServices.slice(0, 4).map((s) => (
-            <Link
-              key={s.id}
-              to={`/booking/${s.id}`}
-              className="service-chip"
-            >
-              <span className="chip-icon">
-                <ServiceIcon name={s.icon} />
-              </span>
-              <strong>{s.name}</strong>
-              <span>{formatPrice(s.basePrice)}~</span>
-            </Link>
-          ))}
-        </div>
+        {loading && companionServices.length === 0 ? (
+          <p className="muted small">서비스 불러오는 중…</p>
+        ) : (
+          <div className="service-rail">
+            {companionServices.slice(0, 4).map((s) => (
+              <Link
+                key={s.id}
+                to={`/booking/${s.id}`}
+                className="service-chip"
+              >
+                <span className="chip-icon">
+                  <ServiceIcon name={s.icon} />
+                </span>
+                <strong>{s.name}</strong>
+                <span>{formatPrice(s.basePrice)}~</span>
+              </Link>
+            ))}
+          </div>
+        )}
       </section>
 
       <section className="section">

@@ -1,22 +1,58 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { formatPrice } from '@mosimi/shared'
-import { ServiceIcon } from '@mosimi/shared'
-import { useBooking } from '@mosimi/shared'
-import { useManager } from '@mosimi/shared'
+import {
+  ApiClientError,
+  formatPrice,
+  ServiceIcon,
+  useBooking,
+  useManager,
+} from '@mosimi/shared'
 
 export function ManagerRequestDetailPage() {
   const { bookingId } = useParams()
   const navigate = useNavigate()
-  const { bookings, acceptBooking } = useBooking()
+  const { bookings, loading, acceptBooking, getBooking } = useBooking()
   const { manager, declineRequest, session } = useManager()
-  const booking = bookings.find((b) => b.id === bookingId)
+  const [booking, setBooking] = useState(
+    () => bookings.find((b) => b.id === bookingId) ?? null,
+  )
   const [error, setError] = useState('')
+  const [pending, setPending] = useState(false)
+
+  useEffect(() => {
+    const local = bookings.find((b) => b.id === bookingId)
+    if (local) setBooking(local)
+  }, [bookings, bookingId])
+
+  useEffect(() => {
+    if (!bookingId || booking) return
+    let cancelled = false
+    void getBooking(bookingId)
+      .then((b) => {
+        if (!cancelled) setBooking(b)
+      })
+      .catch((e) => {
+        if (!cancelled) {
+          setError(e instanceof Error ? e.message : '요청을 불러오지 못했습니다.')
+        }
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [bookingId, booking, getBooking])
+
+  if (loading && !booking) {
+    return (
+      <div className="page">
+        <p className="muted">불러오는 중…</p>
+      </div>
+    )
+  }
 
   if (!booking) {
     return (
       <div className="page">
-        <p>요청을 찾을 수 없습니다.</p>
+        <p>{error || '요청을 찾을 수 없습니다.'}</p>
         <Link to="/requests">목록으로</Link>
       </div>
     )
@@ -30,17 +66,36 @@ export function ManagerRequestDetailPage() {
       setError('수신 중지 상태에서는 수락할 수 없습니다.')
       return
     }
-    const ok = await acceptBooking(booking!.id, manager)
-    if (!ok) {
-      setError('이미 다른 매니저가 수락했거나 취소된 요청입니다.')
-      return
+    setPending(true)
+    setError('')
+    try {
+      const ok = await acceptBooking(booking!.id, manager)
+      if (!ok) {
+        setError('이미 다른 매니저가 수락했거나 취소된 요청입니다.')
+        return
+      }
+      navigate(`/jobs/${booking!.id}`, { replace: true })
+    } catch (e) {
+      setError(
+        e instanceof ApiClientError || e instanceof Error
+          ? e.message
+          : '수락에 실패했습니다.',
+      )
+    } finally {
+      setPending(false)
     }
-    navigate(`/jobs/${booking!.id}`, { replace: true })
   }
 
   async function onDecline() {
-    await declineRequest(booking!.id)
-    navigate('/requests')
+    setPending(true)
+    try {
+      await declineRequest(booking!.id)
+      navigate('/requests')
+    } catch (e) {
+      setError(e instanceof Error ? e.message : '거절에 실패했습니다.')
+    } finally {
+      setPending(false)
+    }
   }
 
   return (
@@ -110,10 +165,20 @@ export function ManagerRequestDetailPage() {
       ) : (
         <div className="action-stack">
           {error && <p className="form-error">{error}</p>}
-          <button type="button" className="btn primary block" onClick={onAccept}>
-            수락하고 배정받기
+          <button
+            type="button"
+            className="btn primary block"
+            disabled={pending}
+            onClick={() => void onAccept()}
+          >
+            {pending ? '처리 중…' : '수락하고 배정받기'}
           </button>
-          <button type="button" className="btn ghost block" onClick={onDecline}>
+          <button
+            type="button"
+            className="btn ghost block"
+            disabled={pending}
+            onClick={() => void onDecline()}
+          >
             거절하기
           </button>
         </div>

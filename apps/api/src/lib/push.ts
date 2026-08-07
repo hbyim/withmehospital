@@ -9,6 +9,23 @@ export type PushPayload = {
   data?: Record<string, unknown>
 }
 
+/** 고객/매니저 앱 deep link (푸시 클릭용) */
+export function appDeepLink(
+  app: 'customer' | 'manager',
+  hashPath: string,
+) {
+  const envKey = app === 'manager' ? 'MANAGER_APP_URL' : 'CUSTOMER_APP_URL'
+  const fallback =
+    app === 'manager' ? 'http://localhost:5174/' : 'http://localhost:5173/'
+  const base = (process.env[envKey] || fallback).replace(/\/?$/, '/')
+  const hash = hashPath.startsWith('#')
+    ? hashPath
+    : hashPath.startsWith('/')
+      ? `#${hashPath}`
+      : `#/${hashPath}`
+  return `${base}${hash}`
+}
+
 function configured() {
   return Boolean(
     process.env.VAPID_PUBLIC_KEY &&

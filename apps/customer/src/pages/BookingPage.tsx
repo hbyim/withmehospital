@@ -1,26 +1,33 @@
-import { useEffect, useMemo, type FormEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { formatPrice, getServiceById } from '@mosimi/shared'
-import { useBooking } from '@mosimi/shared'
-import { ServiceIcon } from '@mosimi/shared'
+import {
+  ApiClientError,
+  formatPrice,
+  ServiceIcon,
+  useBooking,
+  useServices,
+} from '@mosimi/shared'
 
 export function BookingPage() {
   const { serviceId } = useParams()
   const navigate = useNavigate()
   const { draft, setDraft, createBooking, resetDraft } = useBooking()
-  const service = getServiceById(serviceId ?? '')
+  const { getById, loading: servicesLoading, error: servicesError } =
+    useServices()
+  const service = getById(serviceId ?? '')
+  const appliedId = useRef<string | null>(null)
+  const [error, setError] = useState('')
+  const [pending, setPending] = useState(false)
 
   useEffect(() => {
-    if (service) {
-      setDraft({
-        service,
-        durationHours: service.id === 'one-hour' ? 1 : 3,
-        destination:
-          service.category === 'care'
-            ? '자택 / 돌봄 장소'
-            : '서울아산병원',
-      })
-    }
+    if (!service || appliedId.current === service.id) return
+    appliedId.current = service.id
+    setDraft({
+      service,
+      durationHours: service.id === 'one-hour' ? 1 : 3,
+      destination:
+        service.category === 'care' ? '자택 / 돌봄 장소' : '서울아산병원',
+    })
   }, [service, setDraft])
 
   const estimate = useMemo(() => {
@@ -28,10 +35,18 @@ export function BookingPage() {
     return service.basePrice + Math.max(0, draft.durationHours - 3) * 10000
   }, [service, draft.durationHours])
 
+  if (servicesLoading && !service) {
+    return (
+      <div className="page">
+        <p className="muted">서비스 불러오는 중…</p>
+      </div>
+    )
+  }
+
   if (!service) {
     return (
       <div className="page">
-        <p>서비스를 찾을 수 없습니다.</p>
+        <p>{servicesError || '서비스를 찾을 수 없습니다.'}</p>
         <Link to="/services">목록으로</Link>
       </div>
     )
@@ -39,10 +54,22 @@ export function BookingPage() {
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault()
-    const booking = await createBooking()
-    if (!booking) return
-    resetDraft()
-    navigate(`/matching/${booking.id}`)
+    setError('')
+    setPending(true)
+    try {
+      const booking = await createBooking()
+      if (!booking) return
+      resetDraft()
+      navigate(`/matching/${booking.id}`)
+    } catch (err) {
+      setError(
+        err instanceof ApiClientError || err instanceof Error
+          ? err.message
+          : '예약 신청에 실패했습니다.',
+      )
+    } finally {
+      setPending(false)
+    }
   }
 
   return (
@@ -67,7 +94,7 @@ export function BookingPage() {
         </div>
       </div>
 
-      <form className="booking-form" onSubmit={onSubmit}>
+      <form className="booking-form" onSubmit={(e) => void onSubmit(e)}>
         <label>
           이용 대상
           <input
@@ -145,11 +172,12 @@ export function BookingPage() {
             <p>예상 요금</p>
             <strong>{formatPrice(estimate)}</strong>
           </div>
-          <p className="muted small">데모용 견적 · 이용 후 결제 (정기결제 없음)</p>
+          <p className="muted small">이용 후 결제 · 정기결제 없음</p>
         </div>
 
-        <button type="submit" className="btn primary block">
-          매니저 매칭 시작
+        {error && <p className="form-error">{error}</p>}
+        <button type="submit" className="btn primary block" disabled={pending}>
+          {pending ? '신청 중…' : '매니저 매칭 시작'}
         </button>
       </form>
     </div>

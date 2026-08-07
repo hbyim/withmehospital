@@ -53,7 +53,7 @@ function AuthedApp() {
 
 export default function App() {
   return (
-    <AuthProvider expectedRole="customer">
+    <AuthProvider expectedRole="customer" storageKey="mosimi-auth-token-customer">
       <AuthedApp />
     </AuthProvider>
   )

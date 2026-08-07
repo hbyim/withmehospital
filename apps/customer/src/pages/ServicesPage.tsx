@@ -1,15 +1,15 @@
 import { Link, useSearchParams } from 'react-router-dom'
 import {
-  companionServices,
-  careServices,
   formatPrice,
+  ServiceIcon,
+  useServices,
   type ServiceCategory,
 } from '@mosimi/shared'
-import { ServiceIcon } from '@mosimi/shared'
 
 export function ServicesPage() {
   const [params, setParams] = useSearchParams()
   const tab = (params.get('tab') as ServiceCategory) || 'companion'
+  const { companionServices, careServices, loading, error } = useServices()
   const list = tab === 'care' ? careServices : companionServices
 
   return (
@@ -37,27 +37,32 @@ export function ServicesPage() {
         </button>
       </div>
 
-      <ul className="service-list">
-        {list.map((s) => (
-          <li key={s.id}>
-            <Link to={`/booking/${s.id}`} className="service-row">
-              <span className="row-icon">
-                <ServiceIcon name={s.icon} size={24} />
-              </span>
-              <div>
-                <strong>{s.name}</strong>
-                <p>{s.description}</p>
-                <span className="meta">
-                  {s.durationHint} · {formatPrice(s.basePrice)} / {s.unit}
+      {error && <p className="form-error">{error}</p>}
+      {loading && list.length === 0 ? (
+        <p className="muted">서비스 불러오는 중…</p>
+      ) : (
+        <ul className="service-list">
+          {list.map((s) => (
+            <li key={s.id}>
+              <Link to={`/booking/${s.id}`} className="service-row">
+                <span className="row-icon">
+                  <ServiceIcon name={s.icon} size={24} />
                 </span>
-              </div>
-              <span className="chevron" aria-hidden>
-                ›
-              </span>
-            </Link>
-          </li>
-        ))}
-      </ul>
+                <div>
+                  <strong>{s.name}</strong>
+                  <p>{s.description}</p>
+                  <span className="meta">
+                    {s.durationHint} · {formatPrice(s.basePrice)} / {s.unit}
+                  </span>
+                </div>
+                <span className="chevron" aria-hidden>
+                  ›
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   )
 }

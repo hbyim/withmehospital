@@ -1,6 +1,11 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { enableWebPush, useAuth, useBooking } from '@mosimi/shared'
+import {
+  disableWebPush,
+  enableWebPush,
+  useAuth,
+  useBooking,
+} from '@mosimi/shared'
 import { MANAGER_APP_URL } from '../config'
 
 export function MyPage() {
@@ -11,14 +16,27 @@ export function MyPage() {
     ['matched', 'confirmed', 'in_progress', 'matching'].includes(b.status),
   ).length
   const [pushMsg, setPushMsg] = useState<string | null>(null)
+  const [pushOn, setPushOn] = useState(false)
 
   const onEnablePush = async () => {
     setPushMsg(null)
     try {
       await enableWebPush()
+      setPushOn(true)
       setPushMsg('푸시 알림이 활성화되었습니다.')
     } catch (e) {
       setPushMsg(e instanceof Error ? e.message : '푸시 활성화 실패')
+    }
+  }
+
+  const onDisablePush = async () => {
+    setPushMsg(null)
+    try {
+      await disableWebPush()
+      setPushOn(false)
+      setPushMsg('푸시 알림을 껐습니다.')
+    } catch (e) {
+      setPushMsg(e instanceof Error ? e.message : '푸시 해제 실패')
     }
   }
 
@@ -66,9 +84,9 @@ export function MyPage() {
           <button
             type="button"
             className="linkish"
-            onClick={() => void onEnablePush()}
+            onClick={() => void (pushOn ? onDisablePush() : onEnablePush())}
           >
-            푸시 알림 켜기
+            {pushOn ? '푸시 알림 끄기' : '푸시 알림 켜기'}
           </button>
         </li>
         <li>

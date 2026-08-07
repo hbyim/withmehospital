@@ -58,3 +58,21 @@ export async function enableWebPush() {
 
   return { ok: true as const, apiBase: getApiBase() }
 }
+
+export async function disableWebPush() {
+  if (!('serviceWorker' in navigator)) return
+  const reg = await navigator.serviceWorker.getRegistration('./sw.js')
+  const subscription = await reg?.pushManager.getSubscription()
+  if (!subscription) return
+
+  const endpoint = subscription.endpoint
+  try {
+    await api('/api/push/subscribe', {
+      method: 'DELETE',
+      body: JSON.stringify({ endpoint }),
+    })
+  } catch {
+    // ignore server errors on unsubscribe
+  }
+  await subscription.unsubscribe()
+}
