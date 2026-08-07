@@ -67,6 +67,21 @@ app.get('/health', (c) =>
   }),
 )
 
+app.get('/', (c) =>
+  c.json({
+    ok: true,
+    service: 'mosimi-api',
+    dbReady,
+    docs: {
+      health: '/health',
+      login: 'POST /api/auth/login',
+      services: 'GET /api/services',
+      customerApp: 'https://hbyim.github.io/withmehospital/',
+      managerApp: 'https://hbyim.github.io/withmehospital/manager/',
+    },
+  }),
+)
+
 app.route('/api/auth', authRoutes)
 app.route('/api/services', serviceRoutes)
 app.route('/api/bookings', bookingRoutes)
