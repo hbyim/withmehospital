@@ -27,4 +27,15 @@ dist-ssr
 apps/api/data/
 apps/api/.env
 apps/api/.env.neon
+apps/api/.env.neon.*
+
+# Capacitor / native
+apps/*-mobile/android/local.properties
+apps/*-mobile/ios/App/Pods
+apps/*-mobile/ios/App/Podfile.lock
+apps/*-mobile/android/.gradle
+apps/*-mobile/android/app/build
+apps/*-mobile/android/build
+*.keystore
+*.jks
 

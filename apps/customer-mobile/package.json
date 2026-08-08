@@ -1,0 +1,27 @@
+{
+  "name": "@mosimi/customer-mobile",
+  "private": true,
+  "version": "1.0.0",
+  "description": "모시미+ 고객용 iOS/Android 웹앱 (Capacitor)",
+  "scripts": {
+    "sync": "npx cap sync",
+    "open:ios": "npx cap open ios",
+    "open:android": "npx cap open android",
+    "add:ios": "node ../../scripts/add-ios-spm.mjs customer",
+    "add:android": "npx cap add android",
+    "run:ios": "npx cap run ios",
+    "run:android": "npx cap run android"
+  },
+  "dependencies": {
+    "@capacitor/android": "^7.4.3",
+    "@capacitor/core": "^7.4.3",
+    "@capacitor/ios": "^7.4.3",
+    "@capacitor/splash-screen": "^7.0.3",
+    "@capacitor/status-bar": "^7.0.3"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^7.4.3",
+    "typescript": "~6.0.2"
+  }
+}

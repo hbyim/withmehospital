@@ -5,10 +5,12 @@
 ## 구조
 
 ```
-apps/api        # Hono + PostgreSQL REST API
-apps/customer   # 모시미+ 고객 앱
-apps/manager    # 모시미+ 매니저 앱
-packages/shared # 타입·API 클라이언트·컨텍스트
+apps/api              # Hono + PostgreSQL REST API
+apps/customer         # 모시미+ 고객 웹앱 (PWA)
+apps/manager          # 모시미+ 매니저 웹앱 (PWA)
+apps/customer-mobile  # 고객용 iOS/Android (Capacitor)
+apps/manager-mobile   # 매니저용 iOS/Android (Capacitor)
+packages/shared       # 타입·API 클라이언트·컨텍스트
 ```
 
 ## 백엔드 주요 API
@@ -114,6 +116,26 @@ Repository **Settings → Secrets and variables → Actions**에 추가:
 
 - 고객: https://hbyim.github.io/withmehospital/
 - 매니저: https://hbyim.github.io/withmehospital/manager/
+
+## iOS / Android 웹앱 (Capacitor)
+
+고객·매니저 각각 네이티브 셸이 Pages URL을 로드합니다. PWA(홈 화면 추가)도 웹앱에서 지원합니다.
+
+```bash
+npm install
+
+# iOS는 SPM 사용 (CocoaPods 불필요). 최초 1회만:
+node scripts/add-ios-spm.mjs   # 이미 ios/ 가 있으면 생략
+
+# 동기화 후 IDE 열기
+npm run mobile:customer:sync && npm run mobile:customer:ios
+npm run mobile:customer:android
+
+npm run mobile:manager:sync && npm run mobile:manager:ios
+npm run mobile:manager:android
+```
+
+상세: `apps/customer-mobile/README.md`, `apps/manager-mobile/README.md`
 
 ### VAPID 키 생성
 

@@ -18,7 +18,13 @@
     "build": "npm run build -w @mosimi/customer && npm run build -w @mosimi/manager && node scripts/assemble-dist.mjs",
     "build:customer": "npm run build -w @mosimi/customer",
     "build:manager": "npm run build -w @mosimi/manager",
-    "preview": "npm run preview -w @mosimi/customer"
+    "preview": "npm run preview -w @mosimi/customer",
+    "mobile:customer:sync": "npm run sync -w @mosimi/customer-mobile",
+    "mobile:customer:ios": "npm run open:ios -w @mosimi/customer-mobile",
+    "mobile:customer:android": "npm run open:android -w @mosimi/customer-mobile",
+    "mobile:manager:sync": "npm run sync -w @mosimi/manager-mobile",
+    "mobile:manager:ios": "npm run open:ios -w @mosimi/manager-mobile",
+    "mobile:manager:android": "npm run open:android -w @mosimi/manager-mobile"
   },
   "devDependencies": {
     "@types/node": "^24.13.2",
