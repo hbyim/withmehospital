@@ -17,26 +17,51 @@ export function ManagerShell() {
     <div className="app-shell manager-mode">
       <div className="phone-frame manager-frame">
         <div className="phone-glow manager-glow" aria-hidden />
-        <main className={`phone-screen ${hideNav ? 'no-nav' : ''}`}>
-          <Outlet />
-        </main>
-        {!hideNav && (
-          <nav className="bottom-nav manager-nav" aria-label="매니저 메뉴">
-            {tabs.map((tab) => (
-              <NavLink
-                key={tab.to}
-                to={tab.to}
-                end={tab.end}
-                className={({ isActive }) =>
-                  `nav-item ${isActive ? 'active' : ''}`
-                }
-              >
-                <tab.icon />
-                <span>{tab.label}</span>
-              </NavLink>
-            ))}
-          </nav>
-        )}
+        <div className="frame-layout">
+          {!hideNav && (
+            <aside className="sidebar-nav manager-sidebar" aria-label="매니저 메뉴">
+              <p className="sidebar-brand manager-brand">모시미+ 매니저</p>
+              <p className="sidebar-tagline">요청 수락·일정 관리</p>
+              <div className="sidebar-links">
+                {tabs.map((tab) => (
+                  <NavLink
+                    key={tab.to}
+                    to={tab.to}
+                    end={tab.end}
+                    className={({ isActive }) =>
+                      `sidebar-item ${isActive ? 'active' : ''}`
+                    }
+                  >
+                    <tab.icon />
+                    <span>{tab.label}</span>
+                  </NavLink>
+                ))}
+              </div>
+            </aside>
+          )}
+          <div className="frame-main">
+            <main className={`phone-screen ${hideNav ? 'no-nav' : ''}`}>
+              <Outlet />
+            </main>
+            {!hideNav && (
+              <nav className="bottom-nav manager-nav" aria-label="매니저 메뉴">
+                {tabs.map((tab) => (
+                  <NavLink
+                    key={tab.to}
+                    to={tab.to}
+                    end={tab.end}
+                    className={({ isActive }) =>
+                      `nav-item ${isActive ? 'active' : ''}`
+                    }
+                  >
+                    <tab.icon />
+                    <span>{tab.label}</span>
+                  </NavLink>
+                ))}
+              </nav>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   )

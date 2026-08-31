@@ -30,7 +30,7 @@ export function CustomerLoginPage() {
   }
 
   return (
-    <div className="app-shell">
+    <div className="app-shell auth-shell">
       <div className="phone-frame">
         <div className="page">
           <header className="page-header">

@@ -20,26 +20,51 @@ export function AppShell() {
     <div className="app-shell">
       <div className="phone-frame">
         <div className="phone-glow" aria-hidden />
-        <main className={`phone-screen ${hideNav ? 'no-nav' : ''}`}>
-          <Outlet />
-        </main>
-        {!hideNav && (
-          <nav className="bottom-nav" aria-label="주요 메뉴">
-            {tabs.map((tab) => (
-              <NavLink
-                key={tab.to}
-                to={tab.to}
-                end={tab.to === '/'}
-                className={({ isActive }) =>
-                  `nav-item ${isActive ? 'active' : ''}`
-                }
-              >
-                <tab.icon />
-                <span>{tab.label}</span>
-              </NavLink>
-            ))}
-          </nav>
-        )}
+        <div className="frame-layout">
+          {!hideNav && (
+            <aside className="sidebar-nav" aria-label="주요 메뉴">
+              <p className="sidebar-brand">모시미+</p>
+              <p className="sidebar-tagline">병원 동행·돌봄 매칭</p>
+              <div className="sidebar-links">
+                {tabs.map((tab) => (
+                  <NavLink
+                    key={tab.to}
+                    to={tab.to}
+                    end={tab.to === '/'}
+                    className={({ isActive }) =>
+                      `sidebar-item ${isActive ? 'active' : ''}`
+                    }
+                  >
+                    <tab.icon />
+                    <span>{tab.label}</span>
+                  </NavLink>
+                ))}
+              </div>
+            </aside>
+          )}
+          <div className="frame-main">
+            <main className={`phone-screen ${hideNav ? 'no-nav' : ''}`}>
+              <Outlet />
+            </main>
+            {!hideNav && (
+              <nav className="bottom-nav" aria-label="주요 메뉴">
+                {tabs.map((tab) => (
+                  <NavLink
+                    key={tab.to}
+                    to={tab.to}
+                    end={tab.to === '/'}
+                    className={({ isActive }) =>
+                      `nav-item ${isActive ? 'active' : ''}`
+                    }
+                  >
+                    <tab.icon />
+                    <span>{tab.label}</span>
+                  </NavLink>
+                ))}
+              </nav>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   )

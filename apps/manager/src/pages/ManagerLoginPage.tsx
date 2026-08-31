@@ -41,7 +41,7 @@ export function ManagerLoginPage() {
   }
 
   return (
-    <div className="app-shell manager-mode">
+    <div className="app-shell manager-mode auth-shell">
       <div className="phone-frame manager-frame">
         <div className="page">
           <header className="page-header">
