@@ -1,16 +1,22 @@
 :root {
-  --brand: #2f4f7a;
-  --brand-deep: #1c2f4a;
-  --brand-soft: #e4ebf5;
-  --accent: #f0b429;
-  --accent-warm: #e07a4f;
-  --ink: #142423;
-  --muted: #5d6f6d;
-  --line: rgba(20, 36, 35, 0.08);
-  --bg: #eef6f4;
+  --brand: #3a5578;
+  --brand-mid: #4a6890;
+  --brand-deep: #1a2b42;
+  --brand-soft: #eef2f7;
+  --accent: #c9952a;
+  --accent-warm: #c46b45;
+  --ink: #141a22;
+  --muted: #66707d;
+  --line: rgba(20, 26, 34, 0.1);
+  --line-strong: rgba(20, 26, 34, 0.16);
+  --bg: #f2f5f8;
   --surface: #ffffff;
-  --shadow: 0 18px 50px rgba(28, 47, 74, 0.14);
-  --radius: 18px;
+  --surface-muted: #f6f8fb;
+  --shadow: 0 12px 40px rgba(26, 43, 66, 0.11);
+  --shadow-soft: 0 4px 16px rgba(20, 26, 34, 0.05);
+  --radius: 16px;
+  --radius-sm: 12px;
+  --radius-btn: 14px;
   --font: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont,
     'Segoe UI', sans-serif;
   --display: 'Fraunces', 'Pretendard Variable', serif;
@@ -25,9 +31,10 @@
 body {
   min-height: 100dvh;
   background:
-    radial-gradient(ellipse 80% 50% at 10% -10%, #c9d7ea 0%, transparent 55%),
-    radial-gradient(ellipse 70% 45% at 100% 0%, #ffe7c2 0%, transparent 50%),
-    linear-gradient(165deg, #e8eef6 0%, #f4f6f8 45%, #eef1f5 100%);
+    radial-gradient(ellipse 78% 48% at 8% -8%, rgba(176, 196, 222, 0.45) 0%, transparent 55%),
+    radial-gradient(ellipse 62% 40% at 100% 0%, rgba(232, 210, 170, 0.28) 0%, transparent 48%),
+    linear-gradient(168deg, #e9eef5 0%, #f4f6f8 42%, #eef1f4 100%);
+  color: var(--ink);
 }
 
 
@@ -55,6 +62,14 @@ textarea {
 
 button {
   cursor: pointer;
+}
+
+button:disabled,
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
 }
 
 .app-shell {
@@ -189,20 +204,28 @@ button {
   flex-direction: column;
   align-items: center;
   gap: 2px;
-  padding: 6px 2px;
+  padding: 7px 2px;
   color: var(--muted);
   font-size: 11px;
-  border-radius: 14px;
-  transition: color 0.2s, background 0.2s, transform 0.2s;
+  font-weight: 500;
+  border-radius: 12px;
+  transition: color 0.2s ease, background 0.2s ease;
 }
 
 .nav-item.active {
   color: var(--brand-deep);
   background: var(--brand-soft);
+  font-weight: 650;
 }
 
 .nav-item:hover {
-  transform: translateY(-1px);
+  color: var(--brand-deep);
+  background: rgba(58, 85, 120, 0.07);
+}
+
+.nav-item:focus-visible {
+  outline: 2px solid rgba(58, 85, 120, 0.35);
+  outline-offset: 1px;
 }
 
 .page {
@@ -304,33 +327,66 @@ button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  border: none;
-  border-radius: 999px;
+  gap: 8px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-btn);
   padding: 12px 18px;
-  font-weight: 600;
-  transition: transform 0.18s, box-shadow 0.18s, background 0.18s;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+  transition:
+    transform 0.16s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
 }
 
 .btn:hover {
   transform: translateY(-1px);
 }
 
+.btn:active {
+  transform: translateY(0) scale(0.985);
+}
+
+.btn:focus-visible {
+  outline: 2px solid rgba(58, 85, 120, 0.45);
+  outline-offset: 2px;
+}
+
 .btn.primary {
-  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-deep) 100%);
+  background: linear-gradient(165deg, var(--brand-mid) 0%, var(--brand) 48%, var(--brand-deep) 100%);
   color: #fff;
-  box-shadow: 0 10px 24px rgba(26, 122, 114, 0.28);
+  border-color: rgba(26, 43, 66, 0.14);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.16) inset,
+    0 8px 20px rgba(26, 43, 66, 0.18);
+}
+
+.btn.primary:hover {
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.2) inset,
+    0 12px 26px rgba(26, 43, 66, 0.22);
 }
 
 .btn.ghost {
-  background: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.82);
   color: var(--brand-deep);
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-strong);
+  box-shadow: var(--shadow-soft);
+}
+
+.btn.ghost:hover {
+  background: #fff;
+  border-color: rgba(58, 85, 120, 0.3);
+  color: var(--brand);
 }
 
 .btn.block {
   width: 100%;
-  border-radius: 16px;
+  border-radius: var(--radius-btn);
+  padding: 14px 18px;
 }
 
 .section {
@@ -597,10 +653,23 @@ button {
 .booking-form input,
 .booking-form textarea {
   border: 1px solid var(--line);
-  border-radius: 12px;
-  padding: 12px 12px;
-  background: #fff;
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  background: var(--surface);
   color: var(--ink);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.booking-form input:hover,
+.booking-form textarea:hover {
+  border-color: var(--line-strong);
+}
+
+.booking-form input:focus,
+.booking-form textarea:focus {
+  outline: none;
+  border-color: rgba(58, 85, 120, 0.45);
+  box-shadow: 0 0 0 3px rgba(58, 85, 120, 0.12);
 }
 
 .booking-form input[type='range'] {
@@ -1354,9 +1423,10 @@ button {
 /* Manager mode */
 .manager-mode body,
 .manager-mode {
-  --brand: #2f4f7a;
-  --brand-deep: #1c2f4a;
-  --brand-soft: #e4ebf5;
+  --brand: #3a5578;
+  --brand-mid: #4a6890;
+  --brand-deep: #1a2b42;
+  --brand-soft: #eef2f7;
 }
 
 .manager-frame {
