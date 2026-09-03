@@ -4,9 +4,9 @@ import { useBooking } from '@mosimi/shared'
 import { MANAGER_APP_URL } from '../config'
 
 const tips = [
-  '근처 매니저 앱으로 요청을 전달했습니다',
-  '가능 매니저가 일정을 확인하고 있습니다',
-  '수락하는 매니저가 배정됩니다',
+  '근처 매니저에게 요청을 전달했어요',
+  '가능 매니저가 일정을 확인하고 있어요',
+  '수락하는 순간 바로 배정됩니다',
 ]
 
 export function MatchingPage() {
@@ -57,63 +57,122 @@ export function MatchingPage() {
     }
   }, [])
 
+  const mm = String(Math.floor(waited / 60)).padStart(2, '0')
+  const ss = String(waited % 60).padStart(2, '0')
+
   if (loading && !booking) {
     return (
-      <div className="page matching-page">
-        <p className="muted">불러오는 중…</p>
+      <div className="page matching-page matching-page-v2">
+        <div className="match-stage">
+          <div className="radar radar-v2" aria-hidden>
+            <span />
+            <span />
+            <span />
+            <i className="pin" />
+          </div>
+          <p className="muted">불러오는 중…</p>
+        </div>
       </div>
     )
   }
 
   if (!booking) {
     return (
-      <div className="page">
+      <div className="page matching-page matching-page-v2">
         <p>예약을 찾을 수 없습니다.</p>
-        <Link to="/">홈으로</Link>
+        <Link to="/" className="btn ghost">
+          홈으로
+        </Link>
       </div>
     )
   }
 
   return (
-    <div className="page matching-page">
-      <div className="radar" aria-hidden>
-        <span />
-        <span />
-        <span />
-        <i className="pin" />
+    <div className="page matching-page matching-page-v2">
+      <div className="match-bg" aria-hidden>
+        <div className="match-bg-orb a" />
+        <div className="match-bg-orb b" />
       </div>
-      <p className="brand-inline center">모시미+</p>
-      <h1>매니저 수락 대기 중</h1>
-      <p className="muted center">
-        {booking.pickup} 인근 매니저에게 요청을 보냈습니다.
-        <br />
-        매니저 앱에서 수락하면 바로 배정됩니다.
-      </p>
 
-      <p className="match-tip animate-fade-up" key={tipIndex}>
-        {tips[tipIndex]}
-      </p>
-      <p className="muted small center">대기 {waited}초</p>
+      <div className="match-stage">
+        <p className="brand-inline match-brand animate-fade-up">모시미+</p>
 
-      <ol className="match-steps">
-        <li className="done">
-          <span>1</span>요청 접수
-        </li>
-        <li className="done">
-          <span>2</span>매니저 앱으로 전달
-        </li>
-        <li className={booking.manager ? 'done' : ''}>
-          <span>3</span>매니저 수락·배정
-        </li>
-      </ol>
+        <div className="radar radar-v2 animate-fade-up delay-1" aria-hidden>
+          <span />
+          <span />
+          <span />
+          <span className="radar-sweep" />
+          <i className="pin" />
+          <i className="satellite s1" />
+          <i className="satellite s2" />
+          <i className="satellite s3" />
+        </div>
 
-      <div className="action-stack" style={{ marginTop: 20, width: '100%' }}>
-        <a href={MANAGER_APP_URL} className="btn primary block">
-          매니저 앱 열기
-        </a>
-        <Link to={`/detail/${booking.id}`} className="btn ghost block">
-          예약 상세 보기
-        </Link>
+        <h1 className="match-title animate-fade-up delay-1">
+          매니저를
+          <br />
+          <em>찾고 있어요</em>
+        </h1>
+        <p className="match-sub animate-fade-up delay-2">
+          <strong>{booking.pickup}</strong> 인근 매니저에게
+          <br />
+          요청을 보냈습니다
+        </p>
+
+        <div className="match-timer animate-fade-up delay-2" aria-live="polite">
+          <span className="match-timer-label">대기 시간</span>
+          <span className="match-timer-value">
+            {mm}:{ss}
+          </span>
+        </div>
+
+        <p className="match-tip match-tip-v2 animate-fade-up" key={tipIndex}>
+          {tips[tipIndex]}
+        </p>
+      </div>
+
+      <div className="match-panel animate-fade-up delay-3">
+        <div className="match-summary">
+          <p className="match-summary-label">신청 내용</p>
+          <strong>{booking.service.name}</strong>
+          <p>
+            {booking.date} · {booking.time}
+          </p>
+          <p className="muted small">{booking.destination}</p>
+        </div>
+
+        <ol className="match-steps match-steps-v2">
+          <li className="done">
+            <span>1</span>
+            <div>
+              <strong>요청 접수</strong>
+              <p>예약이 접수되었습니다</p>
+            </div>
+          </li>
+          <li className="done active">
+            <span>2</span>
+            <div>
+              <strong>매니저 앱으로 전달</strong>
+              <p>수신 중인 매니저에게 알림</p>
+            </div>
+          </li>
+          <li className={booking.manager ? 'done' : ''}>
+            <span>3</span>
+            <div>
+              <strong>수락·배정</strong>
+              <p>수락 즉시 연결됩니다</p>
+            </div>
+          </li>
+        </ol>
+
+        <div className="action-stack match-actions">
+          <a href={MANAGER_APP_URL} className="btn primary block">
+            매니저 앱 열기
+          </a>
+          <Link to={`/detail/${booking.id}`} className="btn ghost block">
+            예약 상세 보기
+          </Link>
+        </div>
       </div>
     </div>
   )
