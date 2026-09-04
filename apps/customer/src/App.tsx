@@ -19,7 +19,7 @@ function AuthedApp() {
       <div className="app-shell">
         <div className="phone-frame">
           <div className="page matching-page">
-            <p className="brand-inline">모시미+</p>
+            <p className="brand-inline">위드유</p>
             <p className="muted">불러오는 중…</p>
           </div>
         </div>

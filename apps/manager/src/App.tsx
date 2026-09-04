@@ -21,7 +21,7 @@ function AuthedApp() {
       <div className="app-shell manager-mode">
         <div className="phone-frame manager-frame">
           <div className="page matching-page">
-            <p className="brand-inline manager-brand">모시미+ 매니저</p>
+            <p className="brand-inline manager-brand">위드유 매니저</p>
             <p className="muted">불러오는 중…</p>
           </div>
         </div>

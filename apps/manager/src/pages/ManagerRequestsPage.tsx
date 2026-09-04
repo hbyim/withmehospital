@@ -10,7 +10,7 @@ export function ManagerRequestsPage() {
   return (
     <div className="page">
       <header className="page-header">
-        <p className="brand-inline manager-brand">모시미+ 매니저</p>
+        <p className="brand-inline manager-brand">위드유 매니저</p>
         <h1>서비스 요청</h1>
         <p className="muted">
           고객이 신청한 동행·돌봄 요청입니다. 수락하면 담당 매니저로 배정됩니다.

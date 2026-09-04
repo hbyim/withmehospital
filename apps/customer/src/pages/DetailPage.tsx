@@ -113,7 +113,7 @@ export function DetailPage() {
           ←
         </button>
         <div>
-          <p className="brand-inline">모시미+</p>
+          <p className="brand-inline">위드유</p>
           <h1>예약 상세</h1>
         </div>
       </header>

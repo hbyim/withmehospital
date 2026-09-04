@@ -2,7 +2,7 @@ import type { CapacitorConfig } from '@capacitor/cli'
 
 const config: CapacitorConfig = {
   appId: 'plus.mosimi.customer',
-  appName: '모시미+',
+  appName: '위드유',
   webDir: 'www',
   server: {
     // GitHub Pages 고객 앱 (HashRouter)

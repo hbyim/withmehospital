@@ -70,7 +70,7 @@ export function ManagerMyPage() {
   return (
     <div className="page">
       <header className="page-header">
-        <p className="brand-inline manager-brand">모시미+ 매니저</p>
+        <p className="brand-inline manager-brand">위드유 매니저</p>
         <h1>마이페이지</h1>
       </header>
 

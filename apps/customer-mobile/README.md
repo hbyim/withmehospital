@@ -1,4 +1,4 @@
-# 모시미+ 고객용 모바일 웹앱 (iOS / Android)
+# 위드유 고객용 모바일 웹앱 (iOS / Android)
 
 Capacitor로 GitHub Pages 고객 웹앱을 네이티브 셸에서 실행합니다.
 

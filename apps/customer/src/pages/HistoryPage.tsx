@@ -12,7 +12,7 @@ export function HistoryPage() {
   return (
     <div className="page">
       <header className="page-header">
-        <p className="brand-inline">모시미+</p>
+        <p className="brand-inline">위드유</p>
         <h1>이용 내역</h1>
         <p className="muted">신청·매칭·진행·결제 상태를 한곳에서 확인하세요.</p>
       </header>

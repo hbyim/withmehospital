@@ -23,7 +23,7 @@ export function ManagerJobsPage() {
   return (
     <div className="page">
       <header className="page-header">
-        <p className="brand-inline manager-brand">모시미+ 매니저</p>
+        <p className="brand-inline manager-brand">위드유 매니저</p>
         <h1>내 일정</h1>
         <p className="muted">수락·배정된 서비스 일정을 관리합니다.</p>
       </header>

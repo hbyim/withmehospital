@@ -15,7 +15,7 @@ export function ServicesPage() {
   return (
     <div className="page">
       <header className="page-header">
-        <p className="brand-inline">모시미+</p>
+        <p className="brand-inline">위드유</p>
         <h1>서비스 선택</h1>
         <p className="muted">필요한 동행·돌봄을 고르고 바로 예약하세요.</p>
       </header>

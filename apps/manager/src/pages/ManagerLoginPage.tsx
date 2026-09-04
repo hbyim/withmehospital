@@ -45,7 +45,7 @@ export function ManagerLoginPage() {
       <div className="phone-frame manager-frame">
         <div className="page">
           <header className="page-header">
-            <p className="brand-inline manager-brand">모시미+ 매니저</p>
+            <p className="brand-inline manager-brand">위드유 매니저</p>
             <h1>{mode === 'login' ? '매니저 로그인' : '매니저 회원가입'}</h1>
             <p className="muted">
               요청 수락·배정을 위해 매니저 계정으로 로그인하세요.

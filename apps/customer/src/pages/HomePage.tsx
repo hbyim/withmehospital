@@ -21,7 +21,7 @@ export function HomePage() {
         <div className="hero-orb hero-orb-a" aria-hidden />
         <div className="hero-orb hero-orb-b" aria-hidden />
         <div className="hero-content">
-          <p className="brand-mark animate-fade-up">모시미+</p>
+          <p className="brand-mark animate-fade-up">위드유</p>
           <h1 className="hero-title animate-fade-up delay-1">
             바쁜 나를 대신해
             <br />

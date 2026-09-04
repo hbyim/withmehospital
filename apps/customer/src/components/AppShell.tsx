@@ -23,7 +23,7 @@ export function AppShell() {
         <div className="frame-layout">
           {!hideNav && (
             <aside className="sidebar-nav" aria-label="주요 메뉴">
-              <p className="sidebar-brand">모시미+</p>
+              <p className="sidebar-brand">위드유</p>
               <p className="sidebar-tagline">병원 동행·돌봄 매칭</p>
               <div className="sidebar-links">
                 {tabs.map((tab) => (

@@ -19,7 +19,7 @@ writeFileSync(
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>모시미+ 데모</title>
+  <title>위드유 데모</title>
   <style>
     :root {
       --ink: #142423;
@@ -94,15 +94,15 @@ writeFileSync(
 <body>
   <div class="portal">
     <div class="portal-card">
-      <h1>모시미+ 데모</h1>
+      <h1>위드유 데모</h1>
       <p class="lead">PC·태블릿·모바일에 맞춘 고객 앱과 매니저 앱입니다.</p>
       <div class="actions">
         <a href="./">
-          <strong>모시미+ (고객)</strong>
+          <strong>위드유 (고객)</strong>
           <span>병원 동행·돌봄 예약</span>
         </a>
         <a class="manager" href="./manager/">
-          <strong>모시미+ 매니저</strong>
+          <strong>위드유 매니저</strong>
           <span>요청 수락·일정 관리</span>
         </a>
       </div>

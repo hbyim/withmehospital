@@ -34,7 +34,7 @@ export function CustomerLoginPage() {
       <div className="phone-frame">
         <div className="page">
           <header className="page-header">
-            <p className="brand-inline">모시미+</p>
+            <p className="brand-inline">위드유</p>
             <h1>{mode === 'login' ? '고객 로그인' : '고객 회원가입'}</h1>
             <p className="muted">API 연동 계정으로 예약·결제를 이용합니다.</p>
           </header>

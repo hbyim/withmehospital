@@ -20,7 +20,7 @@ export function ManagerShell() {
         <div className="frame-layout">
           {!hideNav && (
             <aside className="sidebar-nav manager-sidebar" aria-label="매니저 메뉴">
-              <p className="sidebar-brand manager-brand">모시미+ 매니저</p>
+              <p className="sidebar-brand manager-brand">위드유 매니저</p>
               <p className="sidebar-tagline">요청 수락·일정 관리</p>
               <div className="sidebar-links">
                 {tabs.map((tab) => (

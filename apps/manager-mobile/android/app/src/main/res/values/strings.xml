@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">모시미+ 매니저</string>
-    <string name="title_activity_main">모시미+ 매니저</string>
+    <string name="app_name">위드유 매니저</string>
+    <string name="title_activity_main">위드유 매니저</string>
     <string name="package_name">plus.mosimi.manager</string>
     <string name="custom_url_scheme">plus.mosimi.manager</string>
 </resources>

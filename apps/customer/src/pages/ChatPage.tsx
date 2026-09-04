@@ -43,7 +43,7 @@ export function ChatPage() {
   const [messages, setMessages] = useState<Msg[]>([
     {
       role: 'bot',
-      text: '안녕하세요, 모시미+ 상담 챗봇입니다. 병원 동행·돌봄 예약과 요금을 도와드릴게요.',
+      text: '안녕하세요, 위드유 상담 챗봇입니다. 병원 동행·돌봄 예약과 요금을 도와드릴게요.',
     },
   ])
   const [input, setInput] = useState('')
@@ -70,7 +70,7 @@ export function ChatPage() {
   return (
     <div className="page chat-page">
       <header className="page-header compact">
-        <p className="brand-inline">모시미+</p>
+        <p className="brand-inline">위드유</p>
         <h1>상담 챗봇</h1>
       </header>
 

@@ -109,7 +109,7 @@ export function ManagerRequestDetailPage() {
           ←
         </button>
         <div>
-          <p className="brand-inline manager-brand">모시미+ 매니저</p>
+          <p className="brand-inline manager-brand">위드유 매니저</p>
           <h1>요청 상세</h1>
         </div>
       </header>

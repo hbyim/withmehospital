@@ -43,7 +43,7 @@ export function MyPage() {
   return (
     <div className="page">
       <header className="page-header">
-        <p className="brand-inline">모시미+</p>
+        <p className="brand-inline">위드유</p>
         <h1>마이페이지</h1>
       </header>
 
@@ -102,7 +102,7 @@ export function MyPage() {
       {pushMsg && <p className="demo-note">{pushMsg}</p>}
 
       <p className="demo-note">
-        고객용 모시미+ — 예약·매칭·결제·푸시는 백엔드 API와 연동됩니다.
+        고객용 위드유 — 예약·매칭·결제·푸시는 백엔드 API와 연동됩니다.
       </p>
     </div>
   )

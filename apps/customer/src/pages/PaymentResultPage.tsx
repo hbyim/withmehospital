@@ -37,7 +37,7 @@ export function PaymentSuccessPage() {
 
   return (
     <div className="page matching-page">
-      <p className="brand-inline">모시미+</p>
+      <p className="brand-inline">위드유</p>
       <h1>결제 확인</h1>
       {error ? (
         <>
@@ -59,7 +59,7 @@ export function PaymentFailPage() {
 
   return (
     <div className="page matching-page">
-      <p className="brand-inline">모시미+</p>
+      <p className="brand-inline">위드유</p>
       <h1>결제 실패</h1>
       <p className="muted">{message}</p>
       <Link to="/history" className="btn primary block">

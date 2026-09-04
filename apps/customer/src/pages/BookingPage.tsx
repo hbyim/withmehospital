@@ -79,7 +79,7 @@ export function BookingPage() {
           ←
         </button>
         <div>
-          <p className="brand-inline">모시미+</p>
+          <p className="brand-inline">위드유</p>
           <h1>예약 신청</h1>
         </div>
       </header>

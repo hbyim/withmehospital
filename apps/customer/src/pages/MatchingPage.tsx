@@ -95,7 +95,7 @@ export function MatchingPage() {
       </div>
 
       <div className="match-stage">
-        <p className="brand-inline match-brand animate-fade-up">모시미+</p>
+        <p className="brand-inline match-brand animate-fade-up">위드유</p>
 
         <div className="radar radar-v2 animate-fade-up delay-1" aria-hidden>
           <span />

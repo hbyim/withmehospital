@@ -1,4 +1,4 @@
-# 모시미+ 상용 데모 (고객 / 매니저 / API)
+# 위드유 상용 데모 (고객 / 매니저 / API)
 
 병원 동행·돌봄 매칭 플랫폼의 **고객 앱**, **매니저 앱**, **백엔드 API** 모노레포입니다.
 
@@ -6,8 +6,8 @@
 
 ```
 apps/api              # Hono + PostgreSQL REST API
-apps/customer         # 모시미+ 고객 웹앱 (PWA)
-apps/manager          # 모시미+ 매니저 웹앱 (PWA)
+apps/customer         # 위드유 고객 웹앱 (PWA)
+apps/manager          # 위드유 매니저 웹앱 (PWA)
 apps/customer-mobile  # 고객용 iOS/Android (Capacitor)
 apps/manager-mobile   # 매니저용 iOS/Android (Capacitor)
 packages/shared       # 타입·API 클라이언트·컨텍스트

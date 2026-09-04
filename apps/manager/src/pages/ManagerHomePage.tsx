@@ -27,7 +27,7 @@ export function ManagerHomePage() {
       <header className="manager-hero">
         <div className="manager-hero-top">
           <div>
-            <p className="brand-inline manager-brand">모시미+ 매니저</p>
+            <p className="brand-inline manager-brand">위드유 매니저</p>
             <h1>{manager.name} 매니저님</h1>
           </div>
           <button

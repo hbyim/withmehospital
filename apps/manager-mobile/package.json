@@ -2,7 +2,7 @@
   "name": "@mosimi/manager-mobile",
   "private": true,
   "version": "1.0.0",
-  "description": "모시미+ 매니저용 iOS/Android 웹앱 (Capacitor)",
+  "description": "위드유 매니저용 iOS/Android 웹앱 (Capacitor)",
   "scripts": {
     "sync": "npx cap sync",
     "open:ios": "npx cap open ios",

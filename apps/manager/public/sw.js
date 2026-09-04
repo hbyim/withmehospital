@@ -35,7 +35,7 @@ self.addEventListener('fetch', (event) => {
 })
 
 self.addEventListener('push', (event) => {
-  let payload = { title: '모시미+', body: '새 알림', url: './#/' }
+  let payload = { title: '위드유', body: '새 알림', url: './#/' }
   try {
     if (event.data) payload = { ...payload, ...event.data.json() }
   } catch {
