@@ -3,9 +3,12 @@ import { z } from 'zod'
 import { HTTPException } from 'hono/http-exception'
 import { authMiddleware, requireRoles, type AppEnv } from '../lib/auth'
 import {
+  applyTossWebhook,
   confirmPayment,
   getPaymentConfig,
   getPaymentByOrderId,
+  refundBookingPayment,
+  type TossMethod,
 } from '../lib/payments'
 import { queryOne } from '../db'
 import type { BookingRow } from '../lib/models'
@@ -68,7 +71,6 @@ paymentRoutes.post(
   },
 )
 
-/** 스텁 모드: paymentKey 없이 orderId만으로 결제 완료 */
 paymentRoutes.post(
   '/confirm-stub',
   authMiddleware,
@@ -115,3 +117,64 @@ paymentRoutes.post(
     })
   },
 )
+
+const refundSchema = z.object({
+  bookingId: z.string().min(1),
+  cancelReason: z.string().min(1).max(200).default('고객 요청 환불'),
+})
+
+paymentRoutes.post(
+  '/refund',
+  authMiddleware,
+  requireRoles('customer', 'admin'),
+  async (c) => {
+    const user = c.get('user')
+    const body = refundSchema.parse(await c.req.json())
+    const booking = await queryOne<BookingRow>(
+      'SELECT * FROM bookings WHERE id = $1',
+      [body.bookingId],
+    )
+    if (!booking) throw new HTTPException(404, { message: 'Booking not found' })
+    if (user.role === 'customer' && booking.customer_id !== user.id) {
+      throw new HTTPException(403, { message: 'Forbidden' })
+    }
+    if (booking.payment_status !== 'paid') {
+      throw new HTTPException(400, { message: 'Paid payment required' })
+    }
+
+    try {
+      const result = await refundBookingPayment({
+        bookingId: body.bookingId,
+        cancelReason: body.cancelReason,
+      })
+      const updated = await queryOne<BookingRow>(
+        'SELECT * FROM bookings WHERE id = $1',
+        [body.bookingId],
+      )
+      if (booking.manager_id) {
+        await sendPushToUser(booking.manager_id, {
+          title: '결제 환불',
+          body: '고객 예약 결제가 환불되었습니다.',
+          url: appDeepLink('manager', `/jobs/${booking.id}`),
+        })
+      }
+      return c.json({
+        refund: result,
+        booking: await mapBooking(updated!),
+      })
+    } catch (err) {
+      throw new HTTPException(400, {
+        message: err instanceof Error ? err.message : 'Refund failed',
+      })
+    }
+  },
+)
+
+/** Toss 웹훅 (서명 검증은 TOSS_WEBHOOK_SECRET 설정 시 확장) */
+paymentRoutes.post('/webhook', async (c) => {
+  const payload = (await c.req.json()) as Record<string, unknown>
+  const result = await applyTossWebhook(payload)
+  return c.json(result)
+})
+
+export type { TossMethod }

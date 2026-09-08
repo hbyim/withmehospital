@@ -11,14 +11,18 @@ import { CUSTOMER_APP_URL } from '../config'
 
 export function ManagerMyPage() {
   const { logout } = useAuth()
-  const { manager, session, setOnline, updateProfile } = useManager()
+  const { manager, session, setOnline, updateProfile, gps } = useManager()
   const { bookings } = useBooking()
   const [pushMsg, setPushMsg] = useState<string | null>(null)
   const [pushOn, setPushOn] = useState(false)
   const [bio, setBio] = useState(manager.bio)
   const [region, setRegion] = useState(manager.region ?? '')
+  const [baseAddress, setBaseAddress] = useState('')
   const [profileMsg, setProfileMsg] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
+  const [shareBusy, setShareBusy] = useState(false)
+
+  const shareOn = Boolean(manager.shareLocation)
 
   useEffect(() => {
     setBio(manager.bio)
@@ -53,12 +57,40 @@ export function ManagerMyPage() {
     }
   }
 
+  const onToggleShare = async () => {
+    setShareBusy(true)
+    setProfileMsg(null)
+    try {
+      if (!shareOn) {
+        const ok = window.confirm(
+          '위치 공유를 켜면 진행 중 예약의 고객에게 실시간 위치가 표시됩니다. 동의하시나요?',
+        )
+        if (!ok) return
+      }
+      await updateProfile({ shareLocation: !shareOn })
+      setProfileMsg(
+        !shareOn
+          ? '위치 공유가 켜졌습니다. GPS를 전송합니다.'
+          : '위치 공유를 껐습니다.',
+      )
+    } catch (e) {
+      setProfileMsg(e instanceof Error ? e.message : '위치 공유 변경 실패')
+    } finally {
+      setShareBusy(false)
+    }
+  }
+
   const onSaveProfile = async (e: FormEvent) => {
     e.preventDefault()
     setSaving(true)
     setProfileMsg(null)
     try {
-      await updateProfile({ bio, region })
+      await updateProfile({
+        bio,
+        region,
+        ...(baseAddress.trim() ? { baseAddress: baseAddress.trim() } : {}),
+      })
+      setBaseAddress('')
       setProfileMsg('프로필이 저장되었습니다.')
     } catch (err) {
       setProfileMsg(err instanceof Error ? err.message : '저장 실패')
@@ -119,6 +151,32 @@ export function ManagerMyPage() {
         </button>
       </label>
 
+      <label className="switch-row">
+        <span>
+          실시간 위치 공유
+          <br />
+          <small className="muted">
+            {shareOn
+              ? gps.lastFix
+                ? `전송 중 · ${gps.lastFix.lat.toFixed(4)}, ${gps.lastFix.lng.toFixed(4)}`
+                : gps.uploading
+                  ? 'GPS 전송 중…'
+                  : 'GPS 대기 중'
+              : '고객 앱 트래킹용 (동의 필요)'}
+          </small>
+        </span>
+        <button
+          type="button"
+          className={`online-toggle ${shareOn ? 'on' : 'off'}`}
+          disabled={shareBusy}
+          onClick={() => void onToggleShare()}
+        >
+          <i />
+          {shareOn ? 'ON' : 'OFF'}
+        </button>
+      </label>
+      {gps.error && <p className="form-error">{gps.error}</p>}
+
       <form className="booking-form" onSubmit={(e) => void onSaveProfile(e)}>
         <label>
           소개
@@ -134,6 +192,14 @@ export function ManagerMyPage() {
             value={region}
             onChange={(e) => setRegion(e.target.value)}
             placeholder="예: 서울 강남"
+          />
+        </label>
+        <label>
+          거점 주소 (지오코딩)
+          <input
+            value={baseAddress}
+            onChange={(e) => setBaseAddress(e.target.value)}
+            placeholder="예: 서울시 강남구 역삼동"
           />
         </label>
         {profileMsg && <p className="demo-note">{profileMsg}</p>}
@@ -171,7 +237,8 @@ export function ManagerMyPage() {
       {pushMsg && <p className="demo-note">{pushMsg}</p>}
 
       <p className="demo-note">
-        매니저 앱 — 요청 수락/거절·일정·푸시가 백엔드 API와 연동됩니다.
+        위치 공유 ON 시 GPS가 서버로 전송되며, 확정·진행 중 예약 고객에게 지도로
+        표시됩니다.
       </p>
     </div>
   )

@@ -157,4 +157,25 @@ export async function migrate() {
     CREATE INDEX IF NOT EXISTS idx_payments_booking ON payments(booking_id);
     CREATE INDEX IF NOT EXISTS idx_push_user ON push_subscriptions(user_id);
   `)
+
+  // 상용 위치·결제 컬럼 (기존 DB 호환)
+  await pool.query(`
+    ALTER TABLE manager_profiles
+      ADD COLUMN IF NOT EXISTS last_lat DOUBLE PRECISION,
+      ADD COLUMN IF NOT EXISTS last_lng DOUBLE PRECISION,
+      ADD COLUMN IF NOT EXISTS location_updated_at TIMESTAMPTZ,
+      ADD COLUMN IF NOT EXISTS share_location BOOLEAN NOT NULL DEFAULT FALSE,
+      ADD COLUMN IF NOT EXISTS location_consent_at TIMESTAMPTZ;
+
+    ALTER TABLE bookings
+      ADD COLUMN IF NOT EXISTS pickup_lat DOUBLE PRECISION,
+      ADD COLUMN IF NOT EXISTS pickup_lng DOUBLE PRECISION,
+      ADD COLUMN IF NOT EXISTS dest_lat DOUBLE PRECISION,
+      ADD COLUMN IF NOT EXISTS dest_lng DOUBLE PRECISION;
+
+    ALTER TABLE payments
+      ADD COLUMN IF NOT EXISTS cancel_reason TEXT,
+      ADD COLUMN IF NOT EXISTS cancelled_at TIMESTAMPTZ,
+      ADD COLUMN IF NOT EXISTS method TEXT;
+  `)
 }

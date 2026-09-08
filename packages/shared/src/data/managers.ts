@@ -10,4 +10,8 @@ export type Manager = {
   color: string
   online?: boolean
   region?: string | null
+  shareLocation?: boolean
+  location?: { lat: number; lng: number } | null
+  locationUpdatedAt?: string | null
+  baseLocation?: { lat: number; lng: number } | null
 }

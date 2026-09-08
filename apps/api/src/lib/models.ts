@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import { queryOne } from '../db'
+import { effectiveManagerLocation, haversineKm } from './geo'
 
 export type BookingStatus =
   | 'matching'
@@ -43,6 +44,11 @@ export type ManagerProfileRow = {
   base_lat: number | null
   base_lng: number | null
   region: string | null
+  last_lat: number | null
+  last_lng: number | null
+  location_updated_at: string | null
+  share_location: boolean
+  location_consent_at: string | null
 }
 
 export type BookingRow = {
@@ -64,6 +70,10 @@ export type BookingRow = {
   created_at: string
   accepted_at: string | null
   updated_at: string
+  pickup_lat: number | null
+  pickup_lng: number | null
+  dest_lat: number | null
+  dest_lng: number | null
 }
 
 export function newId(prefix: string) {
@@ -94,6 +104,7 @@ export function mapManager(
   } catch {
     specialties = []
   }
+  const loc = effectiveManagerLocation(profile)
   return {
     id: user.id,
     name: user.name,
@@ -106,6 +117,13 @@ export function mapManager(
     color: profile.color,
     online: Boolean(profile.online),
     region: profile.region,
+    shareLocation: Boolean(profile.share_location),
+    location: loc,
+    locationUpdatedAt: profile.location_updated_at,
+    baseLocation:
+      profile.base_lat != null && profile.base_lng != null
+        ? { lat: profile.base_lat, lng: profile.base_lng }
+        : null,
   }
 }
 
@@ -148,8 +166,23 @@ export async function mapBooking(row: BookingRow) {
   if (row.manager_id) {
     const user = await getUser(row.manager_id)
     const profile = await getManagerProfile(row.manager_id)
-    if (user && profile) manager = mapManager(user, profile)
+    if (user && profile) {
+      let distanceKm = 1.5
+      const mLoc = effectiveManagerLocation(profile)
+      if (mLoc && row.pickup_lat != null && row.pickup_lng != null) {
+        distanceKm = haversineKm(mLoc, {
+          lat: row.pickup_lat,
+          lng: row.pickup_lng,
+        })
+      }
+      manager = mapManager(user, profile, distanceKm)
+    }
   }
+
+  const trackingStatuses = ['matched', 'confirmed', 'in_progress'] as const
+  const trackingAvailable =
+    Boolean(row.manager_id) &&
+    trackingStatuses.includes(row.status as (typeof trackingStatuses)[number])
 
   return {
     id: row.id,
@@ -171,6 +204,15 @@ export async function mapBooking(row: BookingRow) {
     createdAt: row.created_at,
     acceptedAt: row.accepted_at ?? undefined,
     updatedAt: row.updated_at,
+    pickupLocation:
+      row.pickup_lat != null && row.pickup_lng != null
+        ? { lat: row.pickup_lat, lng: row.pickup_lng }
+        : null,
+    destinationLocation:
+      row.dest_lat != null && row.dest_lng != null
+        ? { lat: row.dest_lat, lng: row.dest_lng }
+        : null,
+    trackingAvailable,
   }
 }
 

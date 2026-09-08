@@ -7,6 +7,7 @@ import {
 } from 'react'
 import { api } from '../api/client'
 import type { Manager } from '../data/managers'
+import { useManagerGps } from '../hooks/useManagerGps'
 import { useAuth } from './AuthContext'
 import { useBooking } from './BookingContext'
 
@@ -25,8 +26,11 @@ type ManagerContextValue = {
     specialties?: string[]
     experienceYears?: number
     online?: boolean
+    shareLocation?: boolean
+    baseAddress?: string
   }) => Promise<void>
   declineRequest: (bookingId: string) => Promise<void>
+  gps: ReturnType<typeof useManagerGps>
 }
 
 const ManagerContext = createContext<ManagerContextValue | null>(null)
@@ -48,6 +52,7 @@ export function ManagerProvider({ children }: { children: ReactNode }) {
   const { declineBooking } = useBooking()
 
   const manager = authManager ?? fallbackManager
+  const gps = useManagerGps(Boolean(manager.shareLocation))
 
   const setOnline = useCallback(
     async (online: boolean) => {
@@ -67,6 +72,8 @@ export function ManagerProvider({ children }: { children: ReactNode }) {
       specialties?: string[]
       experienceYears?: number
       online?: boolean
+      shareLocation?: boolean
+      baseAddress?: string
     }) => {
       await api('/api/managers/me', {
         method: 'PATCH',
@@ -94,8 +101,9 @@ export function ManagerProvider({ children }: { children: ReactNode }) {
       setOnline,
       updateProfile,
       declineRequest,
+      gps,
     }),
-    [manager, setOnline, updateProfile, declineRequest],
+    [manager, setOnline, updateProfile, declineRequest, gps],
   )
 
   return (

@@ -27,13 +27,17 @@ packages/shared       # 타입·API 클라이언트·컨텍스트
 | POST | `/api/bookings/:id/accept` | 매니저 수락·배정 |
 | POST | `/api/bookings/:id/decline` | 매니저 거절 |
 | PATCH | `/api/bookings/:id/status` | 상태 전이 |
-| POST | `/api/bookings/:id/payments/ready` | 결제 준비 (orderId) |
+| POST | `/api/bookings/:id/payments/ready` | 결제 준비 (method: CARD/TOSSPAY/…) |
+| GET | `/api/bookings/:id/tracking` | 실시간 위치 스냅샷 |
 | POST | `/api/payments/confirm` | Toss 결제 확정 |
 | POST | `/api/payments/confirm-stub` | 스텁 결제 확정 |
-| GET | `/api/payments/config` | 결제 모드/클라이언트 키 |
+| POST | `/api/payments/refund` | 결제 환불 (Toss cancel) |
+| POST | `/api/payments/webhook` | Toss 웹훅 |
+| GET | `/api/payments/config` | 결제 모드/수단/클라이언트 키 |
 | GET | `/api/push/vapid-public-key` | Web Push 공개키 |
 | POST | `/api/push/subscribe` | 푸시 구독 등록 |
-| PATCH | `/api/managers/me` | 수신 ON/OFF 등 |
+| PATCH | `/api/managers/me` | 수신·위치공유·거점주소 등 |
+| POST | `/api/managers/me/location` | 매니저 GPS 업로드 |
 
 상태 흐름: `matching → matched → confirmed → in_progress → completed` (또는 `cancelled`)
 
@@ -75,6 +79,7 @@ npm run dev:manager
 |------|------|
 | `DATABASE_URL` | PostgreSQL 연결 문자열 |
 | `TOSS_CLIENT_KEY` / `TOSS_SECRET_KEY` | 설정 시 Toss PG, 없으면 stub |
+| `KAKAO_REST_API_KEY` | 주소 지오코딩 (없으면 Nominatim/폴백) |
 | `VAPID_*` | Web Push (없으면 서버 콘솔 stub 로그) |
 
 프론트는 로컬 개발 시 Vite 프록시(`/api` → `:8787`)를 사용합니다.  
@@ -146,7 +151,17 @@ npx web-push generate-vapid-keys
 생성된 값을 `apps/api/.env`의 `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`에 넣고  
 `VAPID_SUBJECT=mailto:dev@mosimi.local` 를 추가하세요.
 
+## 위치 추적
+
+- 예약 생성 시 픽업/목적지 지오코딩 (`KAKAO_REST_API_KEY` 권장, 없으면 Nominatim/해시 폴백)
+- 매니저 앱 마이페이지에서 **실시간 위치 공유** 동의 → GPS `watchPosition` → `POST /api/managers/me/location`
+- 고객/매니저 예약 상세: OSM+Leaflet 지도, `GET /api/bookings/:id/tracking` 폴링
+- 고객에게 실시간 좌표는 `share_location` + `confirmed`/`in_progress` 일 때만 노출 (`matched`는 거점만)
+
 ## 결제
 
-- **Stub** (기본): 예약 상세 → 결제하기 → 즉시 `paid`
-- **Toss**: 키 설정 후 결제창 → `payment-success.html` → `/#/payment/success`에서 confirm
+- **Stub** (기본, 키 없음): 수단 선택 후 결제하기 → 즉시 `paid`
+- **Toss** (`TOSS_CLIENT_KEY` + `TOSS_SECRET_KEY`): 카드 / 토스페이 / 계좌이체 / 휴대폰
+  - ready → 결제창 → `payment-success.html` → `/#/payment/success` confirm
+  - 예약 취소 시 결제 완료분 자동 환불, 또는 `POST /api/payments/refund`
+  - 웹훅: `POST /api/payments/webhook`

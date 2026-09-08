@@ -39,6 +39,9 @@ export type Booking = {
   customerName?: string
   createdAt: string
   acceptedAt?: string
+  pickupLocation?: { lat: number; lng: number } | null
+  destinationLocation?: { lat: number; lng: number } | null
+  trackingAvailable?: boolean
 }
 
 type BookingDraft = {

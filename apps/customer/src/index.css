@@ -2459,3 +2459,61 @@ button:disabled,
   background: #e4ebf5;
   color: #2f4f7a;
 }
+
+.tracking-panel {
+  margin: 0 0 16px;
+  padding: 14px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid var(--line);
+  backdrop-filter: blur(10px);
+}
+
+.tracking-panel-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.tracking-panel-head h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.tracking-map {
+  background: #e8eef5;
+}
+
+.tracking-map .leaflet-container {
+  height: 100%;
+  width: 100%;
+  font: inherit;
+}
+
+.pay-methods {
+  display: grid;
+  gap: 10px;
+}
+
+.pay-method-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.pay-method {
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: 12px;
+  padding: 12px 10px;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.pay-method.active {
+  border-color: #2f4f7a;
+  background: #eef3f9;
+  color: #2f4f7a;
+}

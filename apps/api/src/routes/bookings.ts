@@ -14,8 +14,13 @@ import {
   type BookingRow,
   type BookingStatus,
 } from '../lib/models'
+import {
+  effectiveManagerLocation,
+  geocodeAddress,
+  haversineKm,
+} from '../lib/geo'
 import { sendPushToUser, appDeepLink } from '../lib/push'
-import { createPaymentReady } from '../lib/payments'
+import { createPaymentReady, refundBookingPayment } from '../lib/payments'
 
 const createSchema = z.object({
   serviceId: z.string().min(1),
@@ -117,6 +122,92 @@ bookingRoutes.get('/:id', async (c) => {
   return c.json({ booking: await mapBooking(row) })
 })
 
+/** 실시간 위치 트래킹 스냅샷 */
+bookingRoutes.get('/:id/tracking', async (c) => {
+  const user = c.get('user')
+  const row = await queryOne<BookingRow>(
+    'SELECT * FROM bookings WHERE id = $1',
+    [c.req.param('id')],
+  )
+  if (!row) throw new HTTPException(404, { message: 'Booking not found' })
+
+  const allowed =
+    user.role === 'admin' ||
+    (user.role === 'customer' && row.customer_id === user.id) ||
+    (user.role === 'manager' && row.manager_id === user.id)
+  if (!allowed) throw new HTTPException(403, { message: 'Forbidden' })
+
+  const trackable = ['matched', 'confirmed', 'in_progress'].includes(row.status)
+  let managerLocation: { lat: number; lng: number } | null = null
+  let locationUpdatedAt: string | null = null
+  let shareLocation = false
+  let distanceToPickupKm: number | null = null
+
+  if (row.manager_id && trackable) {
+    const profile = await getManagerProfile(row.manager_id)
+    if (profile) {
+      shareLocation = Boolean(profile.share_location)
+      locationUpdatedAt = profile.location_updated_at
+      const loc = effectiveManagerLocation(profile)
+      // 고객에게는 공유 ON + 진행 상태에서만 실시간 좌표 노출
+      if (
+        loc &&
+        (user.role === 'manager' ||
+          user.role === 'admin' ||
+          (shareLocation && ['confirmed', 'in_progress'].includes(row.status)))
+      ) {
+        managerLocation = loc
+      } else if (
+        loc &&
+        user.role === 'customer' &&
+        row.status === 'matched' &&
+        profile.base_lat != null
+      ) {
+        // 배정 직후엔 거점만
+        managerLocation = {
+          lat: profile.base_lat,
+          lng: profile.base_lng!,
+        }
+      }
+      if (
+        managerLocation &&
+        row.pickup_lat != null &&
+        row.pickup_lng != null
+      ) {
+        distanceToPickupKm = haversineKm(managerLocation, {
+          lat: row.pickup_lat,
+          lng: row.pickup_lng,
+        })
+      }
+    }
+  }
+
+  return c.json({
+    bookingId: row.id,
+    status: row.status,
+    trackingActive: trackable && Boolean(managerLocation),
+    shareLocation,
+    managerLocation,
+    locationUpdatedAt,
+    distanceToPickupKm,
+    pickup: {
+      address: row.pickup,
+      location:
+        row.pickup_lat != null && row.pickup_lng != null
+          ? { lat: row.pickup_lat, lng: row.pickup_lng }
+          : null,
+    },
+    destination: {
+      address: row.destination,
+      location:
+        row.dest_lat != null && row.dest_lng != null
+          ? { lat: row.dest_lat, lng: row.dest_lng }
+          : null,
+    },
+    polledAt: new Date().toISOString(),
+  })
+})
+
 bookingRoutes.post('/', requireRoles('customer'), async (c) => {
   const user = c.get('user')
   const body = createSchema.parse(await c.req.json())
@@ -125,11 +216,18 @@ bookingRoutes.post('/', requireRoles('customer'), async (c) => {
 
   const id = newId('bk')
   const price = calcPrice(service.base_price, body.durationHours)
+  const [pickupGeo, destGeo] = await Promise.all([
+    geocodeAddress(body.pickup),
+    geocodeAddress(body.destination),
+  ])
+
   await execute(
     `INSERT INTO bookings (
       id, customer_id, service_id, status, date, time, duration_hours,
-      pickup, destination, care_target, note, price, payment_status, customer_name
-    ) VALUES ($1, $2, $3, 'matching', $4, $5, $6, $7, $8, $9, $10, $11, 'unpaid', $12)`,
+      pickup, destination, care_target, note, price, payment_status, customer_name,
+      pickup_lat, pickup_lng, dest_lat, dest_lng
+    ) VALUES ($1, $2, $3, 'matching', $4, $5, $6, $7, $8, $9, $10, $11, 'unpaid', $12,
+      $13, $14, $15, $16)`,
     [
       id,
       user.id,
@@ -143,18 +241,41 @@ bookingRoutes.post('/', requireRoles('customer'), async (c) => {
       body.note,
       price,
       user.name,
+      pickupGeo?.lat ?? null,
+      pickupGeo?.lng ?? null,
+      destGeo?.lat ?? null,
+      destGeo?.lng ?? null,
     ],
   )
 
-  // 온라인 매니저들에게 새 요청 푸시
-  const managers = await query<{ user_id: string }>(
-    `SELECT user_id FROM manager_profiles WHERE online = TRUE`,
+  // 거리 가까운 온라인 매니저 우선 푸시
+  const managers = await query<{
+    user_id: string
+    last_lat: number | null
+    last_lng: number | null
+    base_lat: number | null
+    base_lng: number | null
+  }>(
+    `SELECT user_id, last_lat, last_lng, base_lat, base_lng
+     FROM manager_profiles WHERE online = TRUE`,
   )
+  const ranked = managers
+    .map((m) => {
+      const loc = effectiveManagerLocation(m)
+      const distanceKm =
+        loc && pickupGeo ? haversineKm(loc, pickupGeo) : 999
+      return { user_id: m.user_id, distanceKm }
+    })
+    .sort((a, b) => a.distanceKm - b.distanceKm)
+
   await Promise.all(
-    managers.map((m) =>
+    ranked.slice(0, 30).map((m) =>
       sendPushToUser(m.user_id, {
         title: '새 서비스 요청',
-        body: `${service.name} · ${body.date} ${body.time}`,
+        body:
+          m.distanceKm < 900
+            ? `${service.name} · 약 ${m.distanceKm}km · ${body.date} ${body.time}`
+            : `${service.name} · ${body.date} ${body.time}`,
         url: appDeepLink('manager', '/requests'),
         data: { bookingId: id },
       }),
@@ -286,6 +407,18 @@ bookingRoutes.patch('/:id/status', async (c) => {
     [next, managerId, bookingId],
   )
 
+  // 결제 완료 건 취소 시 자동 환불
+  if (next === 'cancelled' && row.payment_status === 'paid') {
+    try {
+      await refundBookingPayment({
+        bookingId,
+        cancelReason: `${user.role} cancelled booking`,
+      })
+    } catch (err) {
+      console.error('[payments] auto-refund failed', err)
+    }
+  }
+
   const updated = await queryOne<BookingRow>(
     'SELECT * FROM bookings WHERE id = $1',
     [bookingId],
@@ -335,10 +468,25 @@ bookingRoutes.post('/:id/payments/ready', requireRoles('customer'), async (c) =>
   }
 
   const booking = await mapBooking(row)
+  let method: 'CARD' | 'TOSSPAY' | 'TRANSFER' | 'PHONE' | undefined
+  try {
+    const raw = await c.req.json()
+    const parsed = z
+      .object({
+        method: z.enum(['CARD', 'TOSSPAY', 'TRANSFER', 'PHONE']).optional(),
+      })
+      .safeParse(raw)
+    if (parsed.success) method = parsed.data.method
+  } catch {
+    // no body
+  }
+
   const ready = await createPaymentReady({
     bookingId: row.id,
     amount: row.price,
     orderName: `${booking.service.name} ${row.date}`,
+    customerId: user.id,
+    method,
   })
   return c.json({ payment: ready })
 })
@@ -359,6 +507,7 @@ bookingRoutes.post('/:id/pay', requireRoles('customer'), async (c) => {
     bookingId: row.id,
     amount: row.price,
     orderName: `${booking.service.name} ${row.date}`,
+    customerId: user.id,
   })
   return c.json({
     booking,

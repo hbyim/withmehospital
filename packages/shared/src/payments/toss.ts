@@ -1,6 +1,8 @@
 import { api } from '../api/client'
 import type { Booking } from '../store/BookingContext'
 
+export type TossMethod = 'CARD' | 'TOSSPAY' | 'TRANSFER' | 'PHONE'
+
 export type PaymentReady = {
   paymentId: string
   orderId: string
@@ -9,12 +11,15 @@ export type PaymentReady = {
   customerKey: string
   clientKey: string
   mode: 'toss' | 'stub'
+  method?: TossMethod
+  methodLabel?: string
 }
 
 export type PaymentConfig = {
   mode: 'toss' | 'stub'
   clientKey: string
   stub: boolean
+  methods: Array<{ id: TossMethod; label: string }>
 }
 
 declare global {
@@ -58,14 +63,31 @@ function paymentCallbackUrl(kind: 'success' | 'fail') {
   return new URL(`payment-${kind}.html`, window.location.href).href
 }
 
+function tossSdkMethod(method: TossMethod): string {
+  switch (method) {
+    case 'TOSSPAY':
+      return '토스페이'
+    case 'TRANSFER':
+      return '계좌이체'
+    case 'PHONE':
+      return '휴대폰'
+    case 'CARD':
+    default:
+      return '카드'
+  }
+}
+
 export async function getPaymentConfig() {
   return api<PaymentConfig>('/api/payments/config')
 }
 
-export async function prepareBookingPayment(bookingId: string) {
+export async function prepareBookingPayment(
+  bookingId: string,
+  method: TossMethod = 'CARD',
+) {
   return api<{ payment: PaymentReady }>(
     `/api/bookings/${bookingId}/payments/ready`,
-    { method: 'POST' },
+    { method: 'POST', body: JSON.stringify({ method }) },
   )
 }
 
@@ -87,9 +109,22 @@ export async function confirmTossPayment(input: {
   })
 }
 
-/** ready → stub 즉시 확정 또는 Toss 결제창 */
-export async function startBookingPayment(bookingId: string) {
-  const { payment } = await prepareBookingPayment(bookingId)
+export async function refundBookingPayment(
+  bookingId: string,
+  cancelReason = '고객 요청 환불',
+) {
+  return api<{ booking: Booking; refund: unknown }>('/api/payments/refund', {
+    method: 'POST',
+    body: JSON.stringify({ bookingId, cancelReason }),
+  })
+}
+
+/** ready → stub 즉시 확정 또는 Toss 결제창 (카드/토스페이/계좌/휴대폰) */
+export async function startBookingPayment(
+  bookingId: string,
+  method: TossMethod = 'CARD',
+) {
+  const { payment } = await prepareBookingPayment(bookingId, method)
 
   if (payment.mode === 'stub') {
     return confirmStubPayment(payment.orderId, payment.amount)
@@ -101,7 +136,7 @@ export async function startBookingPayment(bookingId: string) {
   }
 
   const toss = window.TossPayments(payment.clientKey)
-  await toss.requestPayment('카드', {
+  await toss.requestPayment(tossSdkMethod(payment.method ?? method), {
     amount: payment.amount,
     orderId: payment.orderId,
     orderName: payment.orderName,
@@ -110,6 +145,5 @@ export async function startBookingPayment(bookingId: string) {
     failUrl: paymentCallbackUrl('fail'),
   })
 
-  // Toss는 리다이렉트하므로 여기까지 오면 보통 취소/닫기
   return null
 }

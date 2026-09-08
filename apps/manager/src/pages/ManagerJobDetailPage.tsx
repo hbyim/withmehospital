@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import {
   ApiClientError,
+  BookingTrackingPanel,
   bookingStatusLabel,
   formatPrice,
   paymentStatusLabel,
@@ -116,6 +117,10 @@ export function ManagerJobDetailPage() {
           </span>
         </p>
       </section>
+
+      {booking.trackingAvailable && bookingId && (
+        <BookingTrackingPanel bookingId={bookingId} enabled />
+      )}
 
       <div className="action-stack">
         {error && <p className="form-error">{error}</p>}

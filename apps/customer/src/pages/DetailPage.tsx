@@ -2,13 +2,24 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import {
   ApiClientError,
+  BookingTrackingPanel,
   bookingStatusLabel,
   formatPrice,
+  getPaymentConfig,
   paymentStatusLabel,
+  refundBookingPayment,
   startBookingPayment,
   useBooking,
+  type TossMethod,
 } from '@mosimi/shared'
 import { MANAGER_APP_URL } from '../config'
+
+const DEFAULT_METHODS: Array<{ id: TossMethod; label: string }> = [
+  { id: 'CARD', label: '신용·체크카드' },
+  { id: 'TOSSPAY', label: '토스페이' },
+  { id: 'TRANSFER', label: '계좌이체' },
+  { id: 'PHONE', label: '휴대폰' },
+]
 
 export function DetailPage() {
   const { bookingId } = useParams()
@@ -26,6 +37,9 @@ export function DetailPage() {
   const [paying, setPaying] = useState(false)
   const [actionPending, setActionPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [payMethod, setPayMethod] = useState<TossMethod>('CARD')
+  const [methods, setMethods] = useState(DEFAULT_METHODS)
+  const [payMode, setPayMode] = useState<'toss' | 'stub'>('stub')
 
   useEffect(() => {
     const local = bookings.find((b) => b.id === bookingId)
@@ -49,6 +63,20 @@ export function DetailPage() {
     }
   }, [bookingId, booking, getBooking])
 
+  useEffect(() => {
+    let cancelled = false
+    void getPaymentConfig()
+      .then((cfg) => {
+        if (cancelled) return
+        setPayMode(cfg.mode)
+        if (cfg.methods?.length) setMethods(cfg.methods)
+      })
+      .catch(() => undefined)
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
   if (loading && !booking) {
     return (
       <div className="page">
@@ -71,9 +99,17 @@ export function DetailPage() {
       booking.status,
     ) &&
     booking.paymentStatus !== 'paid' &&
-    booking.paymentStatus !== 'pending'
+    booking.paymentStatus !== 'refunded'
+
+  const canTrack = Boolean(booking.trackingAvailable)
 
   const onAction = async (status: 'confirmed' | 'cancelled') => {
+    if (status === 'cancelled' && booking.paymentStatus === 'paid') {
+      const ok = window.confirm(
+        '결제된 예약입니다. 취소 시 자동 환불됩니다. 계속할까요?',
+      )
+      if (!ok) return
+    }
     setActionPending(true)
     setError(null)
     try {
@@ -94,7 +130,7 @@ export function DetailPage() {
     setPaying(true)
     setError(null)
     try {
-      const result = await startBookingPayment(booking.id)
+      const result = await startBookingPayment(booking.id, payMethod)
       if (result?.booking) {
         setBooking(result.booking)
         await refreshBookings()
@@ -103,6 +139,22 @@ export function DetailPage() {
       setError(e instanceof Error ? e.message : '결제 실패')
     } finally {
       setPaying(false)
+    }
+  }
+
+  const onRefund = async () => {
+    const ok = window.confirm('결제를 환불할까요?')
+    if (!ok) return
+    setActionPending(true)
+    setError(null)
+    try {
+      const data = await refundBookingPayment(booking.id, '고객 요청 환불')
+      setBooking(data.booking)
+      await refreshBookings()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : '환불 실패')
+    } finally {
+      setActionPending(false)
     }
   }
 
@@ -166,6 +218,10 @@ export function DetailPage() {
         </section>
       )}
 
+      {canTrack && bookingId && (
+        <BookingTrackingPanel bookingId={bookingId} enabled />
+      )}
+
       <div className="action-stack">
         {error && <p className="form-error">{error}</p>}
         {booking.status === 'matching' && (
@@ -194,33 +250,68 @@ export function DetailPage() {
         {booking.status === 'completed' && booking.paymentStatus !== 'paid' && (
           <p className="muted small">이용이 완료되었습니다. 결제를 진행해 주세요.</p>
         )}
-        {booking.paymentStatus === 'pending' && (
-          <p className="muted small">결제가 진행 중입니다.</p>
-        )}
+
         {canPay && (
-          <button
-            type="button"
-            className="btn primary block"
-            disabled={paying}
-            onClick={() => void onPay()}
-          >
-            {paying ? '결제 진행 중…' : `${formatPrice(booking.price)} 결제하기`}
-          </button>
-        )}
-        {booking.paymentStatus === 'paid' && (
-          <p className="muted small">결제가 완료되었습니다.</p>
-        )}
-        {!['completed', 'cancelled'].includes(booking.status) &&
-          booking.paymentStatus !== 'paid' && (
+          <section className="pay-methods">
+            <p className="muted small">
+              결제 수단
+              {payMode === 'stub' ? ' (데모 stub)' : ' (토스페이먼츠)'}
+            </p>
+            <div className="pay-method-grid">
+              {methods.map((m) => (
+                <button
+                  key={m.id}
+                  type="button"
+                  className={`pay-method ${payMethod === m.id ? 'active' : ''}`}
+                  onClick={() => setPayMethod(m.id)}
+                >
+                  {m.label}
+                </button>
+              ))}
+            </div>
             <button
               type="button"
-              className="btn ghost block"
-              disabled={actionPending}
-              onClick={() => void onAction('cancelled')}
+              className="btn primary block"
+              disabled={paying}
+              onClick={() => void onPay()}
             >
-              예약 취소
+              {paying
+                ? '결제 진행 중…'
+                : `${formatPrice(booking.price)} 결제하기`}
             </button>
-          )}
+          </section>
+        )}
+
+        {booking.paymentStatus === 'paid' && (
+          <>
+            <p className="muted small">결제가 완료되었습니다.</p>
+            {['matched', 'confirmed'].includes(booking.status) && (
+              <button
+                type="button"
+                className="btn ghost block"
+                disabled={actionPending}
+                onClick={() => void onRefund()}
+              >
+                결제 환불
+              </button>
+            )}
+          </>
+        )}
+        {booking.paymentStatus === 'refunded' && (
+          <p className="muted small">환불이 완료되었습니다.</p>
+        )}
+
+        {!['completed', 'cancelled'].includes(booking.status) && (
+          <button
+            type="button"
+            className="btn ghost block"
+            disabled={actionPending}
+            onClick={() => void onAction('cancelled')}
+          >
+            예약 취소
+            {booking.paymentStatus === 'paid' ? ' (자동 환불)' : ''}
+          </button>
+        )}
         <a href={MANAGER_APP_URL} className="btn ghost block">
           매니저 앱 열기
         </a>
