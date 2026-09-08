@@ -14,7 +14,7 @@ export function ManagerJobDetailPage() {
   const { bookingId } = useParams()
   const navigate = useNavigate()
   const { bookings, loading, updateBooking, getBooking } = useBooking()
-  const { manager } = useManager()
+  const { manager, updateProfile } = useManager()
   const [booking, setBooking] = useState(
     () => bookings.find((b) => b.id === bookingId) ?? null,
   )
@@ -64,6 +64,13 @@ export function ManagerJobDetailPage() {
     setPending(true)
     setError(null)
     try {
+      if (status === 'in_progress' && !manager.shareLocation) {
+        try {
+          await updateProfile({ shareLocation: true })
+        } catch {
+          // API에서도 자동 ON — 실패해도 서비스 시작은 진행
+        }
+      }
       const next = await updateBooking(booking.id, { status })
       setBooking(next)
     } catch (e) {

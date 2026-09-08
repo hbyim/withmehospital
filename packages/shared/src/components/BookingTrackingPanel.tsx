@@ -9,12 +9,16 @@ type Props = {
   bookingId: string
   enabled?: boolean
   pollMs?: number
+  mapHeight?: number
+  compact?: boolean
 }
 
 export function BookingTrackingPanel({
   bookingId,
   enabled = true,
   pollMs = 8_000,
+  mapHeight = 220,
+  compact = true,
 }: Props) {
   const [tracking, setTracking] = useState<BookingTracking | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -81,7 +85,7 @@ export function BookingTrackingPanel({
   if (!enabled) return null
 
   return (
-    <section className="tracking-panel">
+    <section className={`tracking-panel ${compact ? '' : 'tracking-panel-lg'}`.trim()}>
       <div className="tracking-panel-head">
         <h3>실시간 위치</h3>
         {tracking?.distanceToPickupKm != null && (
@@ -93,7 +97,7 @@ export function BookingTrackingPanel({
       {error && <p className="form-error">{error}</p>}
       {!tracking?.shareLocation && tracking?.status !== 'matched' && (
         <p className="muted small">
-          매니저가 위치 공유를 켜면 실시간 위치가 표시됩니다.
+          매니저 위치를 수신하는 중이거나, 위치 권한이 필요합니다.
         </p>
       )}
       {tracking?.status === 'matched' && (
@@ -101,7 +105,10 @@ export function BookingTrackingPanel({
           예약 확정 후 매니저 실시간 위치가 활성화됩니다. (지금은 활동 거점)
         </p>
       )}
-      <TrackingMap markers={markers} height={220} />
+      {tracking?.trackingActive && (
+        <p className="tracking-active-badge">LIVE</p>
+      )}
+      <TrackingMap markers={markers} height={mapHeight} />
       {tracking?.locationUpdatedAt && (
         <p className="muted small">
           마지막 위치:{' '}

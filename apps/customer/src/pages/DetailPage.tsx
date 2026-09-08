@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
 import {
   ApiClientError,
   BookingTrackingPanel,
@@ -102,6 +102,10 @@ export function DetailPage() {
     booking.paymentStatus !== 'refunded'
 
   const canTrack = Boolean(booking.trackingAvailable)
+
+  if (booking.status === 'in_progress' && bookingId) {
+    return <Navigate to={`/tracking/${bookingId}`} replace />
+  }
 
   const onAction = async (status: 'confirmed' | 'cancelled') => {
     if (status === 'cancelled' && booking.paymentStatus === 'paid') {
@@ -241,11 +245,8 @@ export function DetailPage() {
         )}
         {booking.status === 'confirmed' && (
           <p className="muted small">
-            매니저가 서비스를 시작하면 진행 상태로 바뀝니다.
+            매니저가 서비스를 시작하면 위치 추적 화면으로 자동 이동합니다.
           </p>
-        )}
-        {booking.status === 'in_progress' && (
-          <p className="muted small">서비스가 진행 중입니다.</p>
         )}
         {booking.status === 'completed' && booking.paymentStatus !== 'paid' && (
           <p className="muted small">이용이 완료되었습니다. 결제를 진행해 주세요.</p>

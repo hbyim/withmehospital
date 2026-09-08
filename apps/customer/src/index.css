@@ -2517,3 +2517,46 @@ button:disabled,
   background: #eef3f9;
   color: #2f4f7a;
 }
+
+.tracking-page .tracking-hero-meta {
+  margin-bottom: 12px;
+}
+
+.tracking-page .tracking-hero-meta h2 {
+  margin: 8px 0 4px;
+  font-size: 1.15rem;
+}
+
+.tracking-live-hint {
+  margin: 0 0 12px;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: #2f4f7a;
+}
+
+.tracking-panel-lg {
+  padding: 12px;
+}
+
+.tracking-active-badge {
+  display: inline-block;
+  margin: 0 0 8px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #e11d48;
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  animation: tracking-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes tracking-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}

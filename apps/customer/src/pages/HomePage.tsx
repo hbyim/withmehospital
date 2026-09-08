@@ -83,8 +83,15 @@ export function HomePage() {
               </p>
             ) : null}
           </div>
-          <Link to={`/detail/${upcoming.id}`} className="upcoming-cta">
-            상세 보기
+          <Link
+            to={
+              upcoming.status === 'in_progress'
+                ? `/tracking/${upcoming.id}`
+                : `/detail/${upcoming.id}`
+            }
+            className="upcoming-cta"
+          >
+            {upcoming.status === 'in_progress' ? '위치 추적' : '상세 보기'}
           </Link>
         </section>
       )}

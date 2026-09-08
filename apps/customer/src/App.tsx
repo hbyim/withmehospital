@@ -1,11 +1,13 @@
 import { HashRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { AuthProvider, BookingProvider, useAuth } from '@mosimi/shared'
 import { AppShell } from './components/AppShell'
+import { InProgressTrackingWatcher } from './components/InProgressTrackingWatcher'
 import { HomePage } from './pages/HomePage'
 import { ServicesPage } from './pages/ServicesPage'
 import { BookingPage } from './pages/BookingPage'
 import { MatchingPage } from './pages/MatchingPage'
 import { DetailPage } from './pages/DetailPage'
+import { TrackingPage } from './pages/TrackingPage'
 import { HistoryPage } from './pages/HistoryPage'
 import { ChatPage } from './pages/ChatPage'
 import { MyPage } from './pages/MyPage'
@@ -31,6 +33,7 @@ function AuthedApp() {
   return (
     <BookingProvider>
       <HashRouter>
+        <InProgressTrackingWatcher />
         <Routes>
           <Route element={<AppShell />}>
             <Route index element={<HomePage />} />
@@ -38,6 +41,7 @@ function AuthedApp() {
             <Route path="booking/:serviceId" element={<BookingPage />} />
             <Route path="matching/:bookingId" element={<MatchingPage />} />
             <Route path="detail/:bookingId" element={<DetailPage />} />
+            <Route path="tracking/:bookingId" element={<TrackingPage />} />
             <Route path="history" element={<HistoryPage />} />
             <Route path="chat" element={<ChatPage />} />
             <Route path="me" element={<MyPage />} />

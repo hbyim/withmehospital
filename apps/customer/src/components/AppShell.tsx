@@ -14,6 +14,7 @@ export function AppShell() {
     location.pathname.includes('/booking') ||
     location.pathname.includes('/matching') ||
     location.pathname.includes('/detail') ||
+    location.pathname.includes('/tracking') ||
     location.pathname.includes('/payment')
 
   return (

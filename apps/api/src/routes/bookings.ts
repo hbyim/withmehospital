@@ -433,10 +433,20 @@ bookingRoutes.patch('/:id/status', async (c) => {
   }
   if (updated?.customer_id && user.role === 'manager') {
     if (next === 'in_progress') {
+      // 서비스 시작 시 위치 공유 자동 ON → 고객 추적 화면에서 바로 표시
+      if (updated.manager_id) {
+        await execute(
+          `UPDATE manager_profiles
+           SET share_location = TRUE,
+               location_consent_at = COALESCE(location_consent_at, NOW())
+           WHERE user_id = $1`,
+          [updated.manager_id],
+        )
+      }
       await sendPushToUser(updated.customer_id, {
         title: '서비스가 시작되었습니다',
-        body: '매니저가 서비스를 시작했습니다.',
-        url: appDeepLink('customer', `/detail/${updated.id}`),
+        body: '매니저 실시간 위치를 확인해 주세요.',
+        url: appDeepLink('customer', `/tracking/${updated.id}`),
       })
     }
     if (next === 'completed') {
