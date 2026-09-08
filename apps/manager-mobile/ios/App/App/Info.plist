@@ -47,5 +47,9 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>서비스 진행 중 고객에게 실시간 위치를 공유하기 위해 위치 정보가 필요합니다.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>서비스 진행 중 백그라운드에서도 고객에게 위치를 공유하기 위해 위치 정보가 필요합니다.</string>
 </dict>
 </plist>

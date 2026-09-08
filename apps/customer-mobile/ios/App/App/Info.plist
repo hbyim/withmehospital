@@ -47,5 +47,7 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>예약 관련 위치 확인을 위해 위치 정보가 필요할 수 있습니다.</string>
 </dict>
 </plist>

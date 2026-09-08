@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import {
   disableWebPush,
   enableWebPush,
+  requestLocationPermission,
   useAuth,
   useBooking,
   useManager,
@@ -63,18 +64,42 @@ export function ManagerMyPage() {
     try {
       if (!shareOn) {
         const ok = window.confirm(
-          '위치 공유를 켜면 진행 중 예약의 고객에게 실시간 위치가 표시됩니다. 동의하시나요?',
+          '위치 공유를 켜면 기기 위치 권한이 필요하며, 진행 중 예약의 고객에게 실시간 위치가 표시됩니다. 허용하시나요?',
         )
         if (!ok) return
+
+        const perm = await requestLocationPermission()
+        if (!perm.granted) {
+          setProfileMsg(
+            perm.message ??
+              '위치 권한을 허용해야 실시간 위치 공유를 사용할 수 있습니다.',
+          )
+          return
+        }
       }
       await updateProfile({ shareLocation: !shareOn })
       setProfileMsg(
         !shareOn
-          ? '위치 공유가 켜졌습니다. GPS를 전송합니다.'
+          ? '위치 권한이 허용되었고, GPS 공유가 켜졌습니다.'
           : '위치 공유를 껐습니다.',
       )
     } catch (e) {
       setProfileMsg(e instanceof Error ? e.message : '위치 공유 변경 실패')
+    } finally {
+      setShareBusy(false)
+    }
+  }
+
+  const onRequestPermission = async () => {
+    setShareBusy(true)
+    setProfileMsg(null)
+    try {
+      const ok = await gps.requestPermission()
+      setProfileMsg(
+        ok
+          ? '위치 권한이 허용되었습니다.'
+          : (gps.error ?? '위치 권한을 얻지 못했습니다.'),
+      )
     } finally {
       setShareBusy(false)
     }
@@ -98,6 +123,15 @@ export function ManagerMyPage() {
       setSaving(false)
     }
   }
+
+  const permissionLabel =
+    gps.permission === 'granted'
+      ? '허용됨'
+      : gps.permission === 'denied'
+        ? '거부됨'
+        : gps.permission === 'unsupported'
+          ? '미지원'
+          : '미요청'
 
   return (
     <div className="page">
@@ -156,13 +190,14 @@ export function ManagerMyPage() {
           실시간 위치 공유
           <br />
           <small className="muted">
+            권한: {permissionLabel}
             {shareOn
               ? gps.lastFix
-                ? `전송 중 · ${gps.lastFix.lat.toFixed(4)}, ${gps.lastFix.lng.toFixed(4)}`
+                ? ` · 전송 중 ${gps.lastFix.lat.toFixed(4)}, ${gps.lastFix.lng.toFixed(4)}`
                 : gps.uploading
-                  ? 'GPS 전송 중…'
-                  : 'GPS 대기 중'
-              : '고객 앱 트래킹용 (동의 필요)'}
+                  ? ' · GPS 전송 중…'
+                  : ' · GPS 대기 중'
+              : ' · 고객 앱 트래킹용'}
           </small>
         </span>
         <button
@@ -176,6 +211,17 @@ export function ManagerMyPage() {
         </button>
       </label>
       {gps.error && <p className="form-error">{gps.error}</p>}
+      {(gps.permission === 'denied' || gps.permission === 'prompt') && (
+        <button
+          type="button"
+          className="btn ghost block"
+          style={{ marginBottom: 12 }}
+          disabled={shareBusy}
+          onClick={() => void onRequestPermission()}
+        >
+          위치 권한 허용하기
+        </button>
+      )}
 
       <form className="booking-form" onSubmit={(e) => void onSaveProfile(e)}>
         <label>
@@ -237,8 +283,8 @@ export function ManagerMyPage() {
       {pushMsg && <p className="demo-note">{pushMsg}</p>}
 
       <p className="demo-note">
-        위치 공유 ON 시 GPS가 서버로 전송되며, 확정·진행 중 예약 고객에게 지도로
-        표시됩니다.
+        위치 공유를 켤 때 브라우저/앱 위치 권한 창이 표시됩니다. 허용해야 고객
+        추적 화면에 실시간 위치가 보입니다.
       </p>
     </div>
   )

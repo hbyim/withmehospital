@@ -6,6 +6,7 @@ import {
   bookingStatusLabel,
   formatPrice,
   paymentStatusLabel,
+  requestLocationPermission,
   useBooking,
   useManager,
 } from '@mosimi/shared'
@@ -14,7 +15,7 @@ export function ManagerJobDetailPage() {
   const { bookingId } = useParams()
   const navigate = useNavigate()
   const { bookings, loading, updateBooking, getBooking } = useBooking()
-  const { manager, updateProfile } = useManager()
+  const { manager, updateProfile, gps } = useManager()
   const [booking, setBooking] = useState(
     () => bookings.find((b) => b.id === bookingId) ?? null,
   )
@@ -64,11 +65,23 @@ export function ManagerJobDetailPage() {
     setPending(true)
     setError(null)
     try {
-      if (status === 'in_progress' && !manager.shareLocation) {
-        try {
-          await updateProfile({ shareLocation: true })
-        } catch {
-          // API에서도 자동 ON — 실패해도 서비스 시작은 진행
+      if (status === 'in_progress') {
+        const perm = await requestLocationPermission()
+        if (!perm.granted) {
+          setError(
+            perm.message ??
+              '서비스 시작 전 위치 권한을 허용해야 고객에게 위치를 공유할 수 있습니다.',
+          )
+          return
+        }
+        if (!manager.shareLocation) {
+          try {
+            await updateProfile({ shareLocation: true })
+          } catch {
+            // API에서도 자동 ON
+          }
+        } else {
+          await gps.requestPermission()
         }
       }
       const next = await updateBooking(booking.id, { status })
@@ -143,7 +156,7 @@ export function ManagerJobDetailPage() {
             disabled={pending}
             onClick={() => void onStatus('in_progress')}
           >
-            {pending ? '처리 중…' : '서비스 시작'}
+            {pending ? '처리 중…' : '서비스 시작 (위치 권한 필요)'}
           </button>
         )}
         {booking.status === 'in_progress' && (
