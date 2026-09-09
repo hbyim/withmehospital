@@ -1,31 +1,31 @@
 :root {
-  --brand: #1b6b66;
-  --brand-mid: #248f87;
-  --brand-deep: #0d3f3b;
-  --brand-soft: rgba(231, 243, 241, 0.72);
+  --brand: #0f766e;
+  --brand-mid: #0f766e;
+  --brand-deep: #115e59;
+  --brand-soft: #ccfbf1;
   --accent: #c9952a;
   --accent-warm: #c46b45;
-  --ink: #121c1b;
-  --muted: #667573;
-  --line: rgba(255, 255, 255, 0.42);
-  --line-strong: rgba(255, 255, 255, 0.62);
-  --bg: #e8f2ef;
-  --surface: rgba(255, 255, 255, 0.48);
-  --surface-muted: rgba(247, 250, 249, 0.55);
-  --glass: rgba(255, 255, 255, 0.38);
-  --glass-strong: rgba(255, 255, 255, 0.55);
-  --glass-tint: rgba(232, 246, 243, 0.4);
-  --glass-border: 1px solid rgba(255, 255, 255, 0.58);
-  --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.65);
-  --glass-blur: blur(20px) saturate(1.4);
-  --shadow: 0 16px 48px rgba(13, 63, 59, 0.12);
-  --shadow-soft: 0 6px 20px rgba(18, 28, 27, 0.06);
+  --ink: #0f172a;
+  --muted: #64748b;
+  --line: #e2e8f0;
+  --line-strong: #cbd5e1;
+  --bg: #f8fafc;
+  --surface: #ffffff;
+  --surface-muted: #f8fafc;
+  --glass: rgba(255, 255, 255, 0.72);
+  --glass-strong: rgba(255, 255, 255, 0.88);
+  --glass-tint: rgba(204, 251, 241, 0.35);
+  --glass-border: 1px solid #e2e8f0;
+  --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  --glass-blur: blur(16px) saturate(1.15);
+  --shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
+  --shadow-soft: 0 6px 18px rgba(15, 23, 42, 0.05);
   --radius: 16px;
   --radius-sm: 12px;
-  --radius-btn: 14px;
-  --font: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont,
-    'Segoe UI', sans-serif;
-  --display: 'Fraunces', 'Pretendard Variable', serif;
+  --radius-btn: 12px;
+  --font: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -apple-system,
+    BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --display: 'Pretendard Variable', Pretendard, 'Noto Sans KR', sans-serif;
   color: var(--ink);
   font-family: var(--font);
   line-height: 1.45;
@@ -48,10 +48,8 @@ body,
 body {
   min-height: 100dvh;
   background:
-    radial-gradient(ellipse 70% 55% at 0% 0%, rgba(120, 198, 186, 0.55) 0%, transparent 58%),
-    radial-gradient(ellipse 55% 45% at 100% 5%, rgba(232, 188, 120, 0.42) 0%, transparent 52%),
-    radial-gradient(ellipse 50% 40% at 70% 90%, rgba(140, 180, 210, 0.35) 0%, transparent 55%),
-    linear-gradient(168deg, #d9ebe7 0%, #eef4f2 40%, #e4ebf0 100%);
+    radial-gradient(ellipse 60% 40% at 0% 0%, rgba(15, 118, 110, 0.08) 0%, transparent 58%),
+    var(--bg);
   color: var(--ink);
   background-attachment: fixed;
 }
@@ -91,11 +89,7 @@ button:disabled,
   width: min(100%, 420px);
   height: min(92dvh, 860px);
   border-radius: 32px;
-  background: linear-gradient(
-    160deg,
-    rgba(255, 255, 255, 0.58) 0%,
-    rgba(255, 255, 255, 0.28) 100%
-  );
+  background: var(--surface);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
   box-shadow: var(--shadow), var(--glass-highlight);
@@ -112,9 +106,8 @@ button:disabled,
   z-index: 0;
   pointer-events: none;
   background:
-    radial-gradient(ellipse 80% 50% at 10% 0%, rgba(120, 198, 186, 0.35), transparent 55%),
-    radial-gradient(ellipse 60% 40% at 100% 10%, rgba(232, 188, 120, 0.28), transparent 50%),
-    radial-gradient(ellipse 50% 35% at 50% 100%, rgba(140, 180, 210, 0.22), transparent 55%);
+    radial-gradient(ellipse 80% 50% at 10% 0%, rgba(15, 118, 110, 0.08), transparent 55%),
+    radial-gradient(ellipse 50% 35% at 50% 100%, rgba(204, 251, 241, 0.35), transparent 55%);
 }
 
 .phone-glow {
@@ -124,7 +117,7 @@ button:disabled,
   height: 45%;
   background: radial-gradient(
     circle at 30% 20%,
-    rgba(26, 122, 114, 0.18),
+    rgba(15, 118, 110, 0.1),
     transparent 60%
   );
   z-index: 0;
@@ -335,10 +328,9 @@ button:disabled,
   inset: 0 -20px auto;
   height: 70%;
   background:
-    linear-gradient(180deg, transparent, #fff),
-    radial-gradient(circle at 70% 30%, rgba(240, 180, 41, 0.35), transparent 45%),
-    radial-gradient(circle at 20% 60%, rgba(26, 122, 114, 0.28), transparent 50%),
-    url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 30h60M30 0v60' stroke='%231a7a72' stroke-opacity='0.05'/%3E%3C/svg%3E");
+    linear-gradient(180deg, transparent, var(--bg)),
+    radial-gradient(circle at 70% 30%, rgba(204, 251, 241, 0.55), transparent 45%),
+    radial-gradient(circle at 20% 60%, rgba(15, 118, 110, 0.12), transparent 50%);
   border-radius: 0 0 40% 40% / 0 0 18% 18%;
   animation: drift 12s ease-in-out infinite alternate;
 }
@@ -348,10 +340,9 @@ button:disabled,
   height: 88%;
   border-radius: 28px;
   background:
-    linear-gradient(165deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.92) 72%),
-    radial-gradient(circle at 82% 18%, rgba(240, 180, 41, 0.42), transparent 42%),
-    radial-gradient(circle at 12% 72%, rgba(26, 122, 114, 0.34), transparent 48%),
-    radial-gradient(circle at 48% 8%, rgba(224, 122, 79, 0.16), transparent 40%);
+    linear-gradient(165deg, rgba(255, 255, 255, 0.2) 0%, var(--bg) 72%),
+    radial-gradient(circle at 82% 18%, rgba(255, 247, 237, 0.7), transparent 42%),
+    radial-gradient(circle at 12% 72%, rgba(15, 118, 110, 0.14), transparent 48%);
 }
 
 .hero-orb {
@@ -367,7 +358,7 @@ button:disabled,
   height: 120px;
   right: -12px;
   top: 18px;
-  background: radial-gradient(circle, rgba(240, 180, 41, 0.45), transparent 70%);
+  background: radial-gradient(circle, rgba(204, 251, 241, 0.7), transparent 70%);
   animation: float-orb 9s ease-in-out infinite alternate;
 }
 
@@ -376,7 +367,7 @@ button:disabled,
   height: 90px;
   left: -8px;
   bottom: 40px;
-  background: radial-gradient(circle, rgba(26, 122, 114, 0.4), transparent 70%);
+  background: radial-gradient(circle, rgba(15, 118, 110, 0.18), transparent 70%);
   animation: float-orb 11s ease-in-out infinite alternate-reverse;
 }
 
@@ -731,23 +722,21 @@ button:disabled,
 }
 
 .btn:focus-visible {
-  outline: 2px solid rgba(27, 107, 102, 0.45);
+  outline: 2px solid rgba(15, 118, 110, 0.45);
   outline-offset: 2px;
 }
 
 .btn.primary {
-  background: linear-gradient(165deg, var(--brand-mid) 0%, var(--brand) 48%, var(--brand-deep) 100%);
+  background: var(--brand);
   color: #fff;
-  border-color: rgba(13, 63, 59, 0.12);
-  box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.18) inset,
-    0 8px 20px rgba(13, 63, 59, 0.18);
+  border-color: var(--brand);
+  box-shadow: 0 8px 20px rgba(15, 118, 110, 0.22);
 }
 
 .btn.primary:hover {
-  box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.22) inset,
-    0 12px 26px rgba(13, 63, 59, 0.22);
+  background: var(--brand-deep);
+  border-color: var(--brand-deep);
+  box-shadow: 0 12px 26px rgba(17, 94, 89, 0.26);
 }
 
 .btn.ghost {
@@ -2249,17 +2238,17 @@ button:disabled,
   font-size: 0.9rem;
 }
 
-/* Manager mode */
+/* Manager mode — same teal brand as customer */
 .manager-mode body,
 .manager-mode {
-  --brand: #3a5578;
-  --brand-mid: #4a6890;
-  --brand-deep: #1a2b42;
-  --brand-soft: #eef2f7;
+  --brand: #0f766e;
+  --brand-mid: #0f766e;
+  --brand-deep: #115e59;
+  --brand-soft: #ccfbf1;
 }
 
 .manager-frame {
-  background: #f7f8fb;
+  background: #f8fafc;
 }
 
 .manager-glow {
@@ -2271,12 +2260,12 @@ button:disabled,
 }
 
 .manager-nav .nav-item.active {
-  background: #e4ebf5;
-  color: #1c2f4a;
+  background: #ccfbf1;
+  color: #115e59;
 }
 
 .manager-brand {
-  color: #2f4f7a !important;
+  color: #115e59 !important;
 }
 
 .manager-hero {
@@ -2331,7 +2320,7 @@ button:disabled,
 
 .meta-earn {
   margin-top: 6px !important;
-  color: #2f4f7a !important;
+  color: #115e59 !important;
   font-weight: 700 !important;
 }
 
@@ -2388,9 +2377,9 @@ button:disabled,
 }
 
 .manager-switch button.active {
-  background: #2f4f7a;
+  background: #0f766e;
   color: #fff;
-  border-color: #2f4f7a;
+  border-color: #0f766e;
 }
 
 .menu-list .linkish {
@@ -2421,8 +2410,8 @@ button:disabled,
 }
 
 .badge.in_progress {
-  background: #e4ebf5;
-  color: #2f4f7a;
+  background: #ccfbf1;
+  color: #115e59;
 }
 
 .badge.pay-unpaid {
@@ -2456,8 +2445,8 @@ button:disabled,
 }
 
 .status-pill.in_progress {
-  background: #e4ebf5;
-  color: #2f4f7a;
+  background: #ccfbf1;
+  color: #115e59;
 }
 
 .tracking-panel {
@@ -2483,7 +2472,7 @@ button:disabled,
 }
 
 .tracking-map {
-  background: #e8eef5;
+  background: #f8fafc;
 }
 
 .tracking-map .leaflet-container {
@@ -2513,9 +2502,9 @@ button:disabled,
 }
 
 .pay-method.active {
-  border-color: #2f4f7a;
-  background: #eef3f9;
-  color: #2f4f7a;
+  border-color: #0f766e;
+  background: #ccfbf1;
+  color: #115e59;
 }
 
 .tracking-page .tracking-hero-meta {
@@ -2531,7 +2520,7 @@ button:disabled,
   margin: 0 0 12px;
   font-size: 0.92rem;
   font-weight: 600;
-  color: #2f4f7a;
+  color: #115e59;
 }
 
 .tracking-panel-lg {

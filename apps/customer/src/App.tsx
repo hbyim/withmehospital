@@ -18,7 +18,7 @@ function AuthedApp() {
   const { user, loading } = useAuth()
   if (loading) {
     return (
-      <div className="app-shell">
+      <div className="app-shell" data-audience="guardian">
         <div className="phone-frame">
           <div className="page matching-page">
             <p className="brand-inline">위드유</p>
@@ -58,7 +58,9 @@ function AuthedApp() {
 export default function App() {
   return (
     <AuthProvider expectedRole="customer" storageKey="mosimi-auth-token-customer">
-      <AuthedApp />
+      <div data-audience="guardian">
+        <AuthedApp />
+      </div>
     </AuthProvider>
   )
 }

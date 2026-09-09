@@ -18,7 +18,7 @@ export function AppShell() {
     location.pathname.includes('/payment')
 
   return (
-    <div className="app-shell">
+    <div className="app-shell" data-audience="guardian">
       <div className="phone-frame">
         <div className="phone-glow" aria-hidden />
         <div className="frame-layout">
