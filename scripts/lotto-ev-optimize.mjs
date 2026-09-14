@@ -289,6 +289,14 @@ function fit(samples, design, rows, sizes, { iterations = 300, ridge = 1 } = {})
 const draws = await loadDraws({ refresh: args.has('refresh'), verbose: true })
 const usable = draws.filter((d) => d.no >= PICK_TYPE_FROM && d.sales > 0 && d.pickType)
 
+if (usable.length === 0) {
+  console.error(
+    '당첨자 정보가 있는 회차가 없다. --refresh 로 데이터를 다시 받아야 한다:\n' +
+      '  node scripts/lotto-ev-optimize.mjs --refresh',
+  )
+  process.exit(1)
+}
+
 console.log(`\n인기도 모델 학습 데이터: ${usable[0].no}회 ~ ${usable.at(-1).no}회 (${usable.length}회차)`)
 
 // 수동 티켓 비중 추정: 균등선택이라면 수동 당첨자 수는 (수동 티켓 수 / 전체 조합 수) 만큼 나온다.
