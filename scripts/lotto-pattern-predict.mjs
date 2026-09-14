@@ -7,7 +7,8 @@
 //
 // 사용법: node scripts/lotto-pattern-predict.mjs [--draws=100000000] [--top=5] [--kappa=20]
 //         node scripts/lotto-pattern-predict.mjs --exhaustive   # 전체 8,145,060개 완전탐색
-//         node scripts/lotto-pattern-predict.mjs --backtest     # 모델 예측력 검증
+//         node scripts/lotto-pattern-predict.mjs --backtest     # 백분위 기반 예측력 검증
+//         node scripts/lotto-pattern-predict.mjs --check=30     # 최근 30회차에 실제로 걸었다면 몇 등이었는지
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
@@ -494,5 +495,88 @@ async function runBacktest() {
   )
 }
 
+// 과거 N개 회차에 대해 "그 시점까지의 데이터만으로 뽑은 상위 K개"를 실제 당첨번호와 대조한다.
+// 백분위(--backtest)가 추상적이라면 이쪽은 등수로 바로 보여준다.
+async function runCheck() {
+  const draws = await loadDraws({ refresh: args.has('refresh'), verbose: true })
+  const baseline = computeBaseline()
+  const rounds = argNum('check', 30)
+  const from = Math.max(1, draws.length - rounds)
+
+  const rankName = (matched, hasBonus) => {
+    if (matched === 6) return '1등'
+    if (matched === 5) return hasBonus ? '2등' : '3등'
+    if (matched === 4) return '4등'
+    if (matched === 3) return '5등'
+    return '낙첨'
+  }
+
+  console.log(`\n실전 검증: ${from + 1}회 ~ ${draws.length}회 (${draws.length - from}개 회차)`)
+  console.log(`각 회차마다 직전 회차까지의 데이터로 상위 ${topCount}개를 뽑아 실제 당첨번호와 대조한다\n`)
+
+  const deck = new Uint8Array(NUMBERS)
+  const swapped = new Uint8Array(PICK)
+  const randomPick = new Uint8Array(PICK)
+
+  let modelTickets = 0
+  let modelMatched = 0
+  let modelWins = 0
+  let randomTickets = 0
+  let randomMatched = 0
+  let randomWins = 0
+  const modelBest = []
+
+  for (let t = from; t < draws.length; t += 1) {
+    const model = buildModel(draws.slice(0, t), baseline)
+    const score = makeScorer(model)
+    const top = makeTopK(topCount)
+    forEachCombination((combo) => top.offer(rankOf(combo), score(combo)))
+
+    const actual = new Set(draws[t].nums)
+    const bonus = draws[t].bonus
+    let best = 0
+    for (const { rank } of top.items) {
+      const nums = combinationOf(rank)
+      const matched = nums.filter((v) => actual.has(v)).length
+      modelTickets += 1
+      modelMatched += matched
+      if (matched >= 3) modelWins += 1
+      best = Math.max(best, matched)
+    }
+    modelBest.push(best)
+
+    // 같은 장수만큼 무작위로 사본 경우를 대조군으로 둔다.
+    for (let i = 0; i < NUMBERS; i += 1) deck[i] = i + 1
+    for (let i = 0; i < topCount; i += 1) {
+      drawInto(randomPick, deck, swapped)
+      const matched = [...randomPick].filter((v) => actual.has(v)).length
+      randomTickets += 1
+      randomMatched += matched
+      if (matched >= 3) randomWins += 1
+    }
+
+    const bestTicket = top.items
+      .map(({ rank }) => combinationOf(rank))
+      .reduce((a, b) => (b.filter((v) => actual.has(v)).length > a.filter((v) => actual.has(v)).length ? b : a))
+    const bestMatched = bestTicket.filter((v) => actual.has(v)).length
+    console.log(
+      `  ${draws[t].no}회  실제 ${draws[t].nums.map((v) => String(v).padStart(2, '0')).join(' ')}` +
+        `  |  최고 ${bestTicket.map((v) => String(v).padStart(2, '0')).join(' ')}` +
+        `  ${bestMatched}개 ${rankName(bestMatched, bestTicket.includes(bonus))}`,
+    )
+  }
+
+  const expectedPerTicket = (PICK * PICK) / NUMBERS
+  const winRate = (choose(PICK, 3) * choose(NUMBERS - PICK, 3)) / TOTAL_COMBINATIONS
+
+  console.log(`\n=== 실전 검증 결과 (${draws.length - from}회차 × ${topCount}장 = ${modelTickets}장) ===`)
+  console.log(`패턴 모델   평균 ${(modelMatched / modelTickets).toFixed(3)}개 일치 / 5등 이상 ${modelWins}장`)
+  console.log(`무작위 대조 평균 ${(randomMatched / randomTickets).toFixed(3)}개 일치 / 5등 이상 ${randomWins}장`)
+  console.log(`이론 기대값 평균 ${expectedPerTicket.toFixed(3)}개 일치 / 5등 이상 ${(modelTickets * winRate).toFixed(1)}장`)
+  console.log(`회차별 최고 일치 개수 분포: ${[0, 1, 2, 3, 4, 5, 6].map((k) => `${k}개 ${modelBest.filter((v) => v === k).length}회`).join(' / ')}`)
+  console.log('\n모델이 무작위보다 낫다면 평균 일치 개수가 뚜렷하게 높아야 한다. 그렇지 않다면 예측력이 없다는 뜻이다.')
+}
+
 if (args.has('backtest')) await runBacktest()
+else if (args.has('check')) await runCheck()
 else await runPrediction()
