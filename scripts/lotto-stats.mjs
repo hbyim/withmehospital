@@ -168,6 +168,59 @@ console.log('='.repeat(64))
   )
 }
 
+// [5] 직전 회차가 다음 회차에 대한 정보를 주는가 (시계열 예측의 전제)
+{
+  console.log('\n[5] 회차 간 의존성 (직전 회차로 다음 회차를 예측할 수 있는가)')
+
+  // 연속한 두 회차가 겹치는 번호 개수의 분포 vs 초기하분포
+  const overlapObserved = new Array(PICK + 1).fill(0)
+  for (let t = 1; t < n; t += 1) {
+    const prev = new Set(draws[t - 1].nums)
+    overlapObserved[draws[t].nums.filter((v) => prev.has(v)).length] += 1
+  }
+  const pairs = n - 1
+  const overlapExpected = Array.from(
+    { length: PICK + 1 },
+    (_, k) => (pairs * choose(PICK, k) * choose(NUMBERS - PICK, PICK - k)) / choose(NUMBERS, PICK),
+  )
+  let overlapChi = 0
+  for (let k = 0; k <= PICK; k += 1) {
+    if (overlapExpected[k] >= 1) overlapChi += (overlapObserved[k] - overlapExpected[k]) ** 2 / overlapExpected[k]
+  }
+  console.log(`    직전 회차와 겹친 번호 개수  실제 ${overlapObserved.slice(0, 5).join('/')}`)
+  console.log(`                                이론 ${overlapExpected.slice(0, 5).map((v) => v.toFixed(0)).join('/')}`)
+  console.log(`    카이제곱 ${overlapChi.toFixed(2)} (자유도 4, 5% 임계값 9.49)  ${overlapChi < 9.49 ? '무작위와 구별 안 됨' : '유의한 편향'}`)
+
+  // 번호가 직전 회차에 나왔을 때 이번 회차에 다시 나올 확률 vs 기본 확률
+  let repeated = 0
+  let chances = 0
+  for (let t = 1; t < n; t += 1) {
+    for (const num of draws[t - 1].nums) {
+      chances += 1
+      if (draws[t].nums.includes(num)) repeated += 1
+    }
+  }
+  const baseRate = PICK / NUMBERS
+  const repeatRate = repeated / chances
+  const se = Math.sqrt((baseRate * (1 - baseRate)) / chances)
+  console.log(
+    `    직전 회차 번호의 재출현률 ${(repeatRate * 100).toFixed(2)}% (기본 확률 ${(baseRate * 100).toFixed(2)}%, z = ${((repeatRate - baseRate) / se).toFixed(2)})`,
+  )
+
+  // 조합 특성이 회차를 건너 이어지는가 (lag-1 자기상관)
+  const series = {
+    합계: draws.map((d) => d.nums.reduce((s, v) => s + v, 0)),
+    홀수개수: draws.map((d) => d.nums.filter((v) => v % 2 === 1).length),
+    최대번호: draws.map((d) => d.nums[PICK - 1]),
+  }
+  const lagSe = 1 / Math.sqrt(n)
+  const parts = Object.entries(series).map(([label, values]) => {
+    const r = correlation(values.slice(0, -1), values.slice(1))
+    return `${label} ${r >= 0 ? '+' : ''}${r.toFixed(3)}`
+  })
+  console.log(`    lag-1 자기상관: ${parts.join(' / ')}  (표준오차 ±${lagSe.toFixed(3)})`)
+}
+
 console.log(`\n${'='.repeat(64)}`)
 console.log('위 검정이 전부 "무작위와 구별 안 됨"이면, 어떤 패턴 모델도 예측력을 가질 수 없다.')
 console.log('모델의 실전 성적은 lotto-pattern-predict.mjs --check 로 직접 확인할 수 있다.')
