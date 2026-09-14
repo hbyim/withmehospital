@@ -373,7 +373,6 @@ const popularityRatio = (combo) =>
 
 // 특성들이 서로 얽혀 있어(예: 낮은 번호가 많으면 합계도 작다) 계수 하나만 떼어 읽으면 오해하기 쉽다.
 // 실제 조합을 넣어 인기도가 몇 배인지 보는 편이 정확하다.
-console.log('\n=== 조합 유형별 인기도 (1.0 = 평균적인 조합, 클수록 많이 고름) ===')
 const examples = [
   ['연속 6개 (낮은 쪽)', [1, 2, 3, 4, 5, 6]],
   ['연속 6개 (높은 쪽)', [40, 41, 42, 43, 44, 45]],
@@ -382,12 +381,8 @@ const examples = [
   ['전부 생일 범위 (1~31)', [3, 8, 14, 19, 25, 31]],
   ['고르게 퍼진 조합', [4, 12, 21, 29, 36, 44]],
   ['최근 1241회 당첨번호', [7, 13, 16, 23, 24, 43]],
+  ['패턴 모델이 뽑은 1위', [3, 7, 12, 15, 20, 24]],
 ]
-for (const [label, combo] of examples) {
-  const ratio = popularityRatio(combo)
-  console.log(`  ${label.padEnd(24)} ${format(combo)}   ${ratio.toFixed(2)}배`)
-}
-
 // ---- 기대 당첨금 계산
 const recent = usable.slice(-52)
 const recentTickets = recent.reduce((s, d) => s + d.sales / TICKET_PRICE, 0) / recent.length
@@ -397,7 +392,16 @@ const manualTickets = recentTickets * manualFraction
 
 // 1등 당첨 시 나 말고 다른 당첨자 수 N ~ Poisson(lambda). 기대 수령액 = pool * E[1/(1+N)]
 const expectedPrize = (lambda) => (recentPool * (1 - Math.exp(-lambda))) / lambda
+const lambdaOf = (ratio) => uniformTickets / TOTAL_COMBINATIONS + (manualTickets * ratio) / TOTAL_COMBINATIONS
 const averageLambda = recentTickets / TOTAL_COMBINATIONS
+
+console.log('\n=== 조합 유형별 인기도와 기대 수령액 (인기도 1.0 = 평균적인 조합) ===')
+for (const [label, combo] of examples) {
+  const ratio = popularityRatio(combo)
+  console.log(
+    `  ${label.padEnd(24)} ${format(combo)}   ${ratio.toFixed(2)}배   ${(expectedPrize(lambdaOf(ratio)) / 1e8).toFixed(2)}억원`,
+  )
+}
 console.log(`\n=== 기대 1등 당첨금 (최근 52회 평균: 판매 ${(recentTickets / 1e6).toFixed(1)}백만장, 1등 총액 ${(recentPool / 1e8).toFixed(0)}억원) ===`)
 
 // 역대 당첨번호가 실제로 관측된 인기도 범위. 이보다 극단적인 조합은 모델 밖 외삽이다.
