@@ -30,6 +30,7 @@
     "lotto:backtest": "node scripts/lotto-pattern-predict.mjs --backtest",
     "lotto:check": "node scripts/lotto-pattern-predict.mjs --check=30",
     "lotto:stats": "node scripts/lotto-stats.mjs",
+    "lotto:ev": "node scripts/lotto-ev-optimize.mjs",
     "lotto:history": "node scripts/lotto-history.mjs --refresh"
   },
   "devDependencies": {
