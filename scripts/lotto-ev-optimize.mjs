@@ -450,17 +450,64 @@ for (const [index, { combo, lambda, ratio }] of coldest.entries()) {
   )
 }
 
-console.log(`\n=== 실제 관측 범위 안에서 가장 좋은 조합 ${topCount}개 (권장) ===`)
-console.log(`역대 당첨번호가 실제로 나왔던 최저 인기도 ${observedMinRatio.toFixed(2)}배 이상만 고른 결과다`)
-for (const [index, { combo, lambda, ratio }] of supported.entries()) {
+// 최적 조합은 수없이 많고 인기도가 전부 같다(특성이 같으면 인기도도 같다).
+// 그래서 같은 값 안에서 서로 번호가 겹치지 않는 것들을 골라야 실제로 여러 장 살 수 있다.
+const targetLambda = supported[0].lambda
+const tolerance = 1.005 // 기대 수령액 0.5% 손해까지 허용해 후보 폭을 넓힌다
+let tiedCount = 0
+const pool = []
+const poolLimit = 60_000
+
+// mulberry32: 같은 데이터면 같은 추천이 나오도록 시드를 고정한다.
+let seed = 20260914
+const random = () => {
+  seed = (seed + 0x6d2b79f5) | 0
+  let t = Math.imul(seed ^ (seed >>> 15), 1 | seed)
+  t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
+  return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+}
+
+forEachCombination((combo) => {
+  const r = bucketIndexOf.get(encode(featureVector(combo, vector)))
+  const ratio = Math.exp(logQ[r]) * TOTAL_COMBINATIONS
+  if (ratio < observedMinRatio) return
+  const lambda = uniformTickets / TOTAL_COMBINATIONS + manualTickets * Math.exp(logQ[r])
+  if (lambda > targetLambda * tolerance) return
+
+  tiedCount += 1
+  // 저수지 표본추출: 후보가 수백만 개여도 메모리를 일정하게 유지하면서 고르게 뽑는다.
+  if (pool.length < poolLimit) pool.push({ combo: [...combo], lambda, ratio })
+  else {
+    const slot = Math.floor(random() * tiedCount)
+    if (slot < poolLimit) pool[slot] = { combo: [...combo], lambda, ratio }
+  }
+})
+
+// 열거 순서대로 고르면 앞 번호에 쏠리므로 섞은 뒤 고른다.
+for (let i = pool.length - 1; i > 0; i -= 1) {
+  const j = Math.floor(random() * (i + 1))
+  ;[pool[i], pool[j]] = [pool[j], pool[i]]
+}
+pool.sort((a, b) => a.lambda - b.lambda || 0)
+
+// 이미 고른 조합과 2개를 넘게 겹치지 않는 것만 차례로 채운다.
+const picked = []
+for (const candidate of pool) {
+  if (picked.length >= topCount) break
+  const set = new Set(candidate.combo)
+  if (picked.every((chosen) => chosen.combo.filter((n) => set.has(n)).length <= 2)) picked.push(candidate)
+}
+
+console.log(`\n=== 실제 관측 범위 안에서 가장 좋은 조합 ${picked.length}개 (권장) ===`)
+console.log(`역대 당첨번호가 실제로 나왔던 최저 인기도 ${observedMinRatio.toFixed(2)}배 이상만 골랐고,`)
+console.log(`동점 조합 ${tiedCount.toLocaleString('ko-KR')}개 중 서로 2개까지만 겹치도록 분산시켰다`)
+for (const [index, { combo, lambda, ratio }] of picked.entries()) {
   console.log(
-    `${String(index + 1).padStart(2)}위  ${format(combo)}   인기도 ${ratio.toFixed(2)}배   경쟁자 ${lambda.toFixed(2)}명   ${(expectedPrize(lambda) / 1e8).toFixed(2)}억원`,
+    `${String(index + 1).padStart(2)}번  ${format(combo)}   인기도 ${ratio.toFixed(2)}배   경쟁자 ${lambda.toFixed(2)}명   ${(expectedPrize(lambda) / 1e8).toFixed(2)}억원`,
   )
 }
-if (supported.length > 0) {
-  const gain = ((expectedPrize(supported[0].lambda) - baselinePrize) / baselinePrize) * 100
-  console.log(`-> 평균 대비 기대 수령액 ${gain.toFixed(1)}% 증가 (외삽 없이 데이터로 뒷받침되는 수치)`)
-}
+const gain = ((expectedPrize(targetLambda) - baselinePrize) / baselinePrize) * 100
+console.log(`-> 평균 대비 기대 수령액 ${gain.toFixed(1)}% 증가 (외삽 없이 데이터로 뒷받침되는 수치)`)
 
 // 추천 조합은 특성 공간의 끝에 있다. 그 영역을 뒷받침하는 실제 관측이 있는지 확인한다.
 const historicalRatios = samples
