@@ -8,6 +8,9 @@ import { fileURLToPath } from 'node:url'
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 const cachePath = join(root, '.cache/lotto-draws.json')
 
+// 1등 당첨자의 자동/수동/반자동 구분이 제공되기 시작하는 회차
+export const PICK_TYPE_FROM = 262
+
 const DH_URL = 'https://www.dhlottery.co.kr/lt645/selectPstLt645Info.do?srchLtEpsd=all'
 const MIRROR_URL = 'https://smok95.github.io/lotto/results/all.json'
 const USER_AGENT =
@@ -26,6 +29,7 @@ async function fetchOfficial() {
   const list = body?.data?.list
   if (!Array.isArray(list) || list.length === 0) throw new Error('동행복권 응답에 list 없음')
 
+  // winType1/2/3 = 1등 당첨자의 자동/수동/반자동 수. 262회부터 제공된다.
   return list.map((row) => ({
     no: Number(row.ltEpsd),
     date: String(row.ltRflYmd),
@@ -33,6 +37,14 @@ async function fetchOfficial() {
       .map(Number)
       .sort((a, b) => a - b),
     bonus: Number(row.bnsWnNo),
+    firstWinners: Number(row.rnk1WnNope),
+    firstPrize: Number(row.rnk1WnAmt),
+    sales: Number(row.wholEpsdSumNtslAmt),
+    pickType: {
+      auto: Number(row.winType1),
+      manual: Number(row.winType2),
+      semiAuto: Number(row.winType3),
+    },
   }))
 }
 
@@ -59,6 +71,12 @@ function assertValid(draws) {
     }
     if (draw.bonus < 1 || draw.bonus > 45 || unique.has(draw.bonus)) {
       throw new Error(`${draw.no}회 보너스 번호 오류`)
+    }
+    if (draw.pickType && draw.no >= PICK_TYPE_FROM) {
+      const { auto, manual, semiAuto } = draw.pickType
+      if (auto + manual + semiAuto !== draw.firstWinners) {
+        throw new Error(`${draw.no}회 당첨유형 합(${auto + manual + semiAuto})이 1등 당첨자 수(${draw.firstWinners})와 불일치`)
+      }
     }
   }
 }
