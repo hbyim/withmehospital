@@ -11,6 +11,9 @@ const cachePath = join(root, '.cache/lotto-draws.json')
 // 1등 당첨자의 자동/수동/반자동 구분이 제공되기 시작하는 회차
 export const PICK_TYPE_FROM = 262
 
+// 캐시에 담기는 필드가 바뀌면 올린다. 예전 스키마로 저장된 캐시는 자동으로 다시 받는다.
+const CACHE_VERSION = 2
+
 const DH_URL = 'https://www.dhlottery.co.kr/lt645/selectPstLt645Info.do?srchLtEpsd=all'
 const MIRROR_URL = 'https://smok95.github.io/lotto/results/all.json'
 const USER_AGENT =
@@ -103,12 +106,28 @@ async function crossCheck(draws) {
   return { compared, skipped: false }
 }
 
+function readCache() {
+  if (!existsSync(cachePath)) return null
+  let parsed
+  try {
+    parsed = JSON.parse(readFileSync(cachePath, 'utf8'))
+  } catch {
+    return null
+  }
+  // 예전 버전은 배열을 그대로 저장했고 당첨자 정보가 없다.
+  if (Array.isArray(parsed) || parsed?.version !== CACHE_VERSION) return null
+  return parsed.draws
+}
+
 export async function loadDraws({ refresh = false, verbose = false } = {}) {
-  if (!refresh && existsSync(cachePath)) {
-    const cached = JSON.parse(readFileSync(cachePath, 'utf8'))
+  const cached = refresh ? null : readCache()
+  if (cached) {
     assertValid(cached)
     if (verbose) console.log(`캐시 사용: 1~${cached.length}회`)
     return cached
+  }
+  if (verbose && !refresh && existsSync(cachePath)) {
+    console.log('캐시가 예전 형식이라 다시 받는다')
   }
 
   const draws = (await fetchOfficial()).sort((a, b) => a.no - b.no)
@@ -116,7 +135,7 @@ export async function loadDraws({ refresh = false, verbose = false } = {}) {
   const { compared, skipped } = await crossCheck(draws)
 
   mkdirSync(dirname(cachePath), { recursive: true })
-  writeFileSync(cachePath, JSON.stringify(draws))
+  writeFileSync(cachePath, JSON.stringify({ version: CACHE_VERSION, draws }))
 
   if (verbose) {
     const latest = draws.at(-1)
