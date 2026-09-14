@@ -24,7 +24,11 @@
     "mobile:customer:android": "npm run open:android -w @mosimi/customer-mobile",
     "mobile:manager:sync": "npm run sync -w @mosimi/manager-mobile",
     "mobile:manager:ios": "npm run open:ios -w @mosimi/manager-mobile",
-    "mobile:manager:android": "npm run open:android -w @mosimi/manager-mobile"
+    "mobile:manager:android": "npm run open:android -w @mosimi/manager-mobile",
+    "lotto": "node scripts/lotto-predict.mjs",
+    "lotto:pattern": "node scripts/lotto-pattern-predict.mjs",
+    "lotto:backtest": "node scripts/lotto-pattern-predict.mjs --backtest",
+    "lotto:history": "node scripts/lotto-history.mjs --refresh"
   },
   "devDependencies": {
     "@types/node": "^24.13.2",
